@@ -116,8 +116,7 @@ async function fetchHtml(
   const res = await fetch(url, {
     headers,
     redirect: "follow",
-    // @ts-expect-error Next.js fetch cache option
-    next: { revalidate: 0 },
+    cache: "no-store",
   });
   const html = await res.text();
   return {
@@ -268,8 +267,7 @@ async function resolveFinalUrl(productUrl: string) {
       method: "GET",
       headers: BROWSER_HEADERS,
       redirect: "follow",
-      // @ts-expect-error Next.js fetch cache option
-      next: { revalidate: 0 },
+      cache: "no-store",
     });
     return res.url || productUrl;
   } catch {

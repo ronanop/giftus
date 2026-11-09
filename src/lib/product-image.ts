@@ -1,16 +1,21 @@
 /** Amazon tracking / pixel URLs that look like images but never render a product photo. */
 export function isUsableProductImage(url?: string | null): url is string {
   if (!url) return false;
+  const raw = url.toLowerCase();
+  // String-level reject before URL parse — Amazon tracker URLs often contain `$uedata`.
+  if (
+    raw.includes("fls-") ||
+    raw.includes("/uedata") ||
+    raw.includes("$uedata") ||
+    raw.includes("unpixel")
+  ) {
+    return false;
+  }
   try {
     const u = new URL(url);
     const host = u.hostname.toLowerCase();
     const path = `${u.pathname}${u.search}`.toLowerCase();
     if (
-      host.startsWith("fls-") ||
-      host.includes("fls-eu.") ||
-      host.includes("fls-na.") ||
-      path.includes("/uedata") ||
-      path.includes("unpixel") ||
       /pixel|sprite|transparent|grey-pixel|gray-pixel|spinner|loading-/.test(
         path,
       )
