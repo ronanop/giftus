@@ -31,7 +31,8 @@ export function slugify(input: string) {
 export function detectStore(url: string) {
   try {
     const host = new URL(url).hostname.replace(/^www\./, "");
-    if (host.includes("amazon")) return "Amazon";
+    if (host.includes("amazon") || host === "amzn.in" || host === "amzn.to" || host.endsWith(".amzn.in"))
+      return "Amazon";
     if (host.includes("flipkart")) return "Flipkart";
     if (host.includes("myntra")) return "Myntra";
     if (host.includes("firstcry")) return "FirstCry";

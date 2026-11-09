@@ -128,7 +128,11 @@ export function RegistryEditor({ initial }: { initial: Registry }) {
       if (!res.ok) throw new Error(data.error || "Could not add item");
       setRegistry((prev) => ({ ...prev, items: [data.item, ...prev.items] }));
       setProductUrl("");
-      setMessage("Gift added");
+      setMessage(
+        p.partial
+          ? "Gift added — store blocked full details; edit title/image if needed."
+          : "Gift added",
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed");
       setMessage("");
