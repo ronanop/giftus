@@ -33,6 +33,10 @@ export const DEMO_REGISTRY: Registry = {
   upiId: "giftus@upi",
   upiName: "Aanya's Parents",
   isPublic: true,
+  categories: [
+    { id: "c1", name: "Everyday essentials", sortOrder: 0 },
+    { id: "c2", name: "Nursery gear", sortOrder: 1 },
+  ],
   items: [
     {
       id: "g1",
@@ -44,6 +48,7 @@ export const DEMO_REGISTRY: Registry = {
       currency: "INR",
       storeName: "Amazon",
       productUrl: "https://www.amazon.in/",
+      categoryId: "c1",
       status: "purchased",
       giftedBy: "Meera Aunty",
       giftMessage: "Can't wait to cuddle her!",
@@ -59,6 +64,7 @@ export const DEMO_REGISTRY: Registry = {
       currency: "INR",
       storeName: "Flipkart",
       productUrl: "https://www.flipkart.com/",
+      categoryId: "c2",
       status: "available",
     },
     {
@@ -71,6 +77,7 @@ export const DEMO_REGISTRY: Registry = {
       currency: "INR",
       storeName: "FirstCry",
       productUrl: "https://www.firstcry.com/",
+      categoryId: "c1",
       status: "available",
     },
     {
@@ -83,6 +90,7 @@ export const DEMO_REGISTRY: Registry = {
       currency: "INR",
       storeName: "Amazon",
       productUrl: "https://www.amazon.in/",
+      categoryId: "c2",
       status: "reserved",
       giftedBy: "Rahul (holding)",
       giftedAt: new Date().toISOString(),

@@ -11,6 +11,7 @@ const schema = z.object({
   price: z.number().optional(),
   storeName: z.string().optional(),
   productUrl: z.string().url(),
+  categoryId: z.string().optional(),
 });
 
 export async function POST(

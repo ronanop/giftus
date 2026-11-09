@@ -21,6 +21,14 @@ export interface RegistryPhoto {
   caption?: string;
 }
 
+export interface GiftCategory {
+  id: string;
+  name: string;
+  /** Optional override; otherwise derived from a product image in the category. */
+  imageUrl?: string;
+  sortOrder: number;
+}
+
 export interface GiftItem {
   id: string;
   title: string;
@@ -30,6 +38,7 @@ export interface GiftItem {
   currency: "INR";
   storeName?: string;
   productUrl: string;
+  categoryId?: string;
   status: GiftItemStatus;
   giftedBy?: string;
   giftMessage?: string;
@@ -59,6 +68,7 @@ export interface Registry {
   upiId?: string;
   upiName?: string;
   isPublic: boolean;
+  categories: GiftCategory[];
   items: GiftItem[];
   funds: CashFund[];
   createdAt: string;

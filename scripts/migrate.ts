@@ -56,6 +56,11 @@ async function main() {
     );
   `);
 
+  await db.execute(sql`
+    ALTER TABLE registries
+    ADD COLUMN IF NOT EXISTS categories jsonb DEFAULT '[]'::jsonb;
+  `);
+
   const tables = await db.execute(sql`
     SELECT table_name FROM information_schema.tables
     WHERE table_schema = 'public'

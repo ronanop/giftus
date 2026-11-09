@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { CashFund, GiftItem, Registry } from "@/lib/types";
 import { formatINR, occasionLabel } from "@/lib/format";
+import { groupItemsByCategory } from "@/lib/categories";
 import {
   isUsableProductImage,
   repairGiftImageUrl,
@@ -20,7 +21,7 @@ export function RegistryView({ initial }: { initial: Registry }) {
   const [fund, setFund] = useState<CashFund | null>(null);
   const [flashId, setFlashId] = useState<string | null>(null);
 
-  const items = useMemo(() => {
+  const filteredItems = useMemo(() => {
     if (filter === "all") return registry.items;
     if (filter === "available") {
       return registry.items.filter(
@@ -30,9 +31,100 @@ export function RegistryView({ initial }: { initial: Registry }) {
     return registry.items.filter((i) => i.status === "purchased");
   }, [filter, registry.items]);
 
+  const grouped = useMemo(
+    () =>
+      groupItemsByCategory({
+        ...registry,
+        categories: registry.categories || [],
+        items: filteredItems,
+      }),
+    [registry, filteredItems],
+  );
+
   const purchasedCount = registry.items.filter(
     (i) => i.status === "purchased",
   ).length;
+
+  function renderGiftCard(item: GiftItem, index: number) {
+    const claimed = item.status === "purchased";
+    return (
+      <Reveal key={item.id} delay={(index % 4) * 70}>
+        <article
+          className={`gift-card overflow-hidden rounded-[1.75rem] bg-white shadow-[0_12px_40px_rgba(28,20,16,0.06)] ${
+            flashId === item.id ? "claim-highlight" : ""
+          }`}
+        >
+          <div className="relative aspect-[16/11] overflow-hidden bg-gradient-to-br from-mist to-petal">
+            {(() => {
+              const src = repairGiftImageUrl({
+                imageUrl: item.imageUrl,
+                productUrl: item.productUrl,
+              });
+              if (!isUsableProductImage(src)) return null;
+              return (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={src}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              );
+            })()}
+            {item.storeName ? (
+              <span className="absolute right-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-medium shadow-sm">
+                {item.storeName}
+              </span>
+            ) : null}
+            {claimed ? (
+              <div className="absolute inset-x-4 bottom-4 rounded-full bg-sage px-4 py-2 text-center text-sm text-white shadow-[0_10px_24px_rgba(74,93,78,0.35)]">
+                Gifted by {item.giftedBy}
+              </div>
+            ) : null}
+          </div>
+          <div className="p-5">
+            <h3 className="font-display text-xl text-ink">{item.title}</h3>
+            {item.description ? (
+              <p className="mt-1 line-clamp-2 text-sm text-ink/60">
+                {item.description}
+              </p>
+            ) : null}
+            {item.price ? (
+              <p className="mt-3 font-medium text-ink">
+                {formatINR(item.price)}
+              </p>
+            ) : null}
+            {claimed && item.giftMessage ? (
+              <p className="mt-3 text-sm italic text-rose">
+                &ldquo;{item.giftMessage}&rdquo;
+              </p>
+            ) : null}
+            {!claimed ? (
+              <div className="mt-4 flex gap-2">
+                <a
+                  href={item.productUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full border border-mist px-4 py-2 text-sm transition hover:border-ink/30 hover:bg-mist/60"
+                >
+                  View
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setGiftItem(item)}
+                  className="btn-glow rounded-full bg-rose px-4 py-2 text-sm font-semibold text-white hover:bg-rose-deep"
+                >
+                  Gift this
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </article>
+      </Reveal>
+    );
+  }
 
   function highlight(id: string) {
     setFlashId(id);
@@ -145,89 +237,59 @@ export function RegistryView({ initial }: { initial: Registry }) {
             </div>
           </Reveal>
 
-          <div className="mt-8 grid gap-5 sm:grid-cols-2">
-            {items.map((item, i) => {
-              const claimed = item.status === "purchased";
-              return (
-                <Reveal key={item.id} delay={(i % 4) * 70}>
-                  <article
-                    className={`gift-card overflow-hidden rounded-[1.75rem] bg-white shadow-[0_12px_40px_rgba(28,20,16,0.06)] ${
-                      flashId === item.id ? "claim-highlight" : ""
-                    }`}
-                  >
-                    <div className="relative aspect-[16/11] overflow-hidden bg-gradient-to-br from-mist to-petal">
-                      {(() => {
-                        const src = repairGiftImageUrl({
-                          imageUrl: item.imageUrl,
-                          productUrl: item.productUrl,
-                        });
-                        if (!isUsableProductImage(src)) return null;
-                        return (
+          <div className="mt-8 space-y-12">
+            {grouped.groups.map(({ category, imageUrl, items }) =>
+              items.length > 0 ? (
+                <div key={category.id}>
+                  <Reveal>
+                    <div className="mb-5 flex items-center gap-4">
+                      <div className="relative h-16 w-16 overflow-hidden rounded-2xl bg-mist shadow-[0_8px_24px_rgba(28,20,16,0.08)]">
+                        {isUsableProductImage(imageUrl) ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
-                            src={src}
+                            src={imageUrl}
                             alt=""
                             className="h-full w-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = "none";
-                            }}
                           />
-                        );
-                      })()}
-                      {item.storeName ? (
-                        <span className="absolute right-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-medium shadow-sm">
-                          {item.storeName}
-                        </span>
-                      ) : null}
-                      {claimed ? (
-                        <div className="absolute inset-x-4 bottom-4 rounded-full bg-sage px-4 py-2 text-center text-sm text-white shadow-[0_10px_24px_rgba(74,93,78,0.35)]">
-                          Gifted by {item.giftedBy}
-                        </div>
-                      ) : null}
+                        ) : null}
+                      </div>
+                      <div>
+                        <h3 className="font-display text-2xl text-ink">
+                          {category.name}
+                        </h3>
+                        <p className="text-sm text-ink/55">
+                          {items.length} gift{items.length === 1 ? "" : "s"}
+                        </p>
+                      </div>
                     </div>
-                    <div className="p-5">
-                      <h3 className="font-display text-xl text-ink">
-                        {item.title}
-                      </h3>
-                      {item.description ? (
-                        <p className="mt-1 line-clamp-2 text-sm text-ink/60">
-                          {item.description}
-                        </p>
-                      ) : null}
-                      {item.price ? (
-                        <p className="mt-3 font-medium text-ink">
-                          {formatINR(item.price)}
-                        </p>
-                      ) : null}
-                      {claimed && item.giftMessage ? (
-                        <p className="mt-3 text-sm italic text-rose">
-                          &ldquo;{item.giftMessage}&rdquo;
-                        </p>
-                      ) : null}
-                      {!claimed ? (
-                        <div className="mt-4 flex gap-2">
-                          <a
-                            href={item.productUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="rounded-full border border-mist px-4 py-2 text-sm transition hover:border-ink/30 hover:bg-mist/60"
-                          >
-                            View
-                          </a>
-                          <button
-                            type="button"
-                            onClick={() => setGiftItem(item)}
-                            className="btn-glow rounded-full bg-rose px-4 py-2 text-sm font-semibold text-white hover:bg-rose-deep"
-                          >
-                            Gift this
-                          </button>
-                        </div>
-                      ) : null}
-                    </div>
-                  </article>
-                </Reveal>
-              );
-            })}
+                  </Reveal>
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    {items.map((item, i) => renderGiftCard(item, i))}
+                  </div>
+                </div>
+              ) : null,
+            )}
+
+            {grouped.uncategorized.length > 0 ? (
+              <div>
+                {(registry.categories || []).length > 0 ? (
+                  <Reveal>
+                    <h3 className="mb-5 font-display text-2xl text-ink">
+                      More gifts
+                    </h3>
+                  </Reveal>
+                ) : null}
+                <div className="grid gap-5 sm:grid-cols-2">
+                  {grouped.uncategorized.map((item, i) =>
+                    renderGiftCard(item, i),
+                  )}
+                </div>
+              </div>
+            ) : null}
+
+            {filteredItems.length === 0 ? (
+              <p className="text-sm text-ink/55">No gifts in this filter.</p>
+            ) : null}
           </div>
         </section>
 

@@ -12,6 +12,7 @@ import {
 } from "./product-image";
 import type {
   CashFund,
+  GiftCategory,
   GiftItem,
   Occasion,
   Registry,
@@ -26,6 +27,15 @@ function rowToRegistry(row: typeof registries.$inferSelect): Registry {
       imageUrl: sanitizeProductImageUrl(item.imageUrl),
     }),
   );
+  const categories = (
+    ((row as { categories?: GiftCategory[] | null }).categories as
+      | GiftCategory[]
+      | null) ?? []
+  ).map((c, index) => ({
+    ...c,
+    imageUrl: sanitizeProductImageUrl(c.imageUrl),
+    sortOrder: c.sortOrder ?? index,
+  }));
   return {
     id: row.id,
     slug: row.slug,
@@ -40,6 +50,7 @@ function rowToRegistry(row: typeof registries.$inferSelect): Registry {
     upiId: row.upiId ?? undefined,
     upiName: row.upiName ?? undefined,
     isPublic: row.isPublic ?? true,
+    categories,
     items,
     funds: ((row.funds as CashFund[] | null) ?? []) as CashFund[],
     createdAt: row.createdAt?.toISOString() ?? new Date().toISOString(),
@@ -256,6 +267,7 @@ export async function createRegistry(input: {
     upiId: input.upiId,
     upiName: input.upiName || input.title,
     isPublic: true,
+    categories: [],
     items: [],
     funds: [],
     createdAt: now,
@@ -282,6 +294,7 @@ export async function updateRegistry(
       | "upiName"
       | "isPublic"
       | "occasion"
+      | "categories"
       | "items"
       | "funds"
     >
@@ -316,6 +329,127 @@ export async function addGiftItem(
   const items = [gift, ...registry.items];
   await updateRegistry(registryId, ownerId, { items });
   return gift;
+}
+
+export async function updateGiftItem(
+  registryId: string,
+  ownerId: string,
+  itemId: string,
+  patch: {
+    title?: string;
+    description?: string;
+    imageUrl?: string | null;
+    price?: number | null;
+    storeName?: string;
+    productUrl?: string;
+    categoryId?: string | null;
+    status?: GiftItem["status"];
+  },
+) {
+  const registry = await getRegistryById(registryId);
+  if (!registry || registry.ownerId !== ownerId) return null;
+  const idx = registry.items.findIndex((i) => i.id === itemId);
+  if (idx < 0) return null;
+  const current = registry.items[idx];
+  const next: GiftItem = {
+    ...current,
+    title: patch.title ?? current.title,
+    description:
+      patch.description !== undefined ? patch.description : current.description,
+    storeName: patch.storeName ?? current.storeName,
+    productUrl: patch.productUrl ?? current.productUrl,
+    status: patch.status ?? current.status,
+    imageUrl:
+      patch.imageUrl === undefined
+        ? current.imageUrl
+        : sanitizeProductImageUrl(patch.imageUrl || undefined),
+    price:
+      patch.price === undefined
+        ? current.price
+        : patch.price == null
+          ? undefined
+          : patch.price,
+    categoryId:
+      patch.categoryId === undefined
+        ? current.categoryId
+        : patch.categoryId || undefined,
+  };
+  const items = [...registry.items];
+  items[idx] = next;
+  await updateRegistry(registryId, ownerId, { items });
+  return next;
+}
+
+export async function deleteGiftItem(
+  registryId: string,
+  ownerId: string,
+  itemId: string,
+) {
+  const registry = await getRegistryById(registryId);
+  if (!registry || registry.ownerId !== ownerId) return null;
+  const items = registry.items.filter((i) => i.id !== itemId);
+  if (items.length === registry.items.length) return null;
+  await updateRegistry(registryId, ownerId, { items });
+  return true;
+}
+
+export async function addGiftCategory(
+  registryId: string,
+  ownerId: string,
+  input: { name: string; imageUrl?: string },
+) {
+  const registry = await getRegistryById(registryId);
+  if (!registry || registry.ownerId !== ownerId) return null;
+  const category: GiftCategory = {
+    id: nanoid(),
+    name: input.name.trim(),
+    imageUrl: sanitizeProductImageUrl(input.imageUrl),
+    sortOrder: registry.categories.length,
+  };
+  const categories = [...registry.categories, category];
+  await updateRegistry(registryId, ownerId, { categories });
+  return category;
+}
+
+export async function updateGiftCategory(
+  registryId: string,
+  ownerId: string,
+  categoryId: string,
+  patch: Partial<Pick<GiftCategory, "name" | "imageUrl" | "sortOrder">>,
+) {
+  const registry = await getRegistryById(registryId);
+  if (!registry || registry.ownerId !== ownerId) return null;
+  const idx = registry.categories.findIndex((c) => c.id === categoryId);
+  if (idx < 0) return null;
+  const categories = [...registry.categories];
+  categories[idx] = {
+    ...categories[idx],
+    ...patch,
+    name: patch.name?.trim() || categories[idx].name,
+    imageUrl:
+      patch.imageUrl !== undefined
+        ? sanitizeProductImageUrl(patch.imageUrl)
+        : categories[idx].imageUrl,
+  };
+  await updateRegistry(registryId, ownerId, { categories });
+  return categories[idx];
+}
+
+export async function deleteGiftCategory(
+  registryId: string,
+  ownerId: string,
+  categoryId: string,
+) {
+  const registry = await getRegistryById(registryId);
+  if (!registry || registry.ownerId !== ownerId) return null;
+  const categories = registry.categories.filter((c) => c.id !== categoryId);
+  if (categories.length === registry.categories.length) return null;
+  // Detach gifts from removed category
+  const items = registry.items.map((item) =>
+    item.categoryId === categoryId ? { ...item, categoryId: undefined } : item,
+  );
+  await updateRegistry(registryId, ownerId, { categories, items });
+  return true;
 }
 
 export async function addCashFund(

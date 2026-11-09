@@ -36,6 +36,7 @@ export const registries = pgTable("registries", {
   upiId: text("upi_id"),
   upiName: text("upi_name"),
   isPublic: boolean("is_public").default(true),
+  categories: jsonb("categories").$type<unknown[]>().default([]),
   items: jsonb("items").$type<unknown[]>().default([]),
   funds: jsonb("funds").$type<unknown[]>().default([]),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
