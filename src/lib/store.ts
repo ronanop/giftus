@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { getDb } from "./db/client";
 import { registries, users } from "./db/schema";
 import { slugify } from "./format";
+import { repairGiftImageUrl } from "./product-image";
 import type {
   CashFund,
   GiftItem,
@@ -14,6 +15,15 @@ import type {
 } from "./types";
 
 function rowToRegistry(row: typeof registries.$inferSelect): Registry {
+  const items = (((row.items as GiftItem[] | null) ?? []) as GiftItem[]).map(
+    (item) => ({
+      ...item,
+      imageUrl: repairGiftImageUrl({
+        imageUrl: item.imageUrl,
+        productUrl: item.productUrl,
+      }),
+    }),
+  );
   return {
     id: row.id,
     slug: row.slug,
@@ -28,7 +38,7 @@ function rowToRegistry(row: typeof registries.$inferSelect): Registry {
     upiId: row.upiId ?? undefined,
     upiName: row.upiName ?? undefined,
     isPublic: row.isPublic ?? true,
-    items: ((row.items as GiftItem[] | null) ?? []) as GiftItem[],
+    items,
     funds: ((row.funds as CashFund[] | null) ?? []) as CashFund[],
     createdAt: row.createdAt?.toISOString() ?? new Date().toISOString(),
     updatedAt: row.updatedAt?.toISOString() ?? new Date().toISOString(),

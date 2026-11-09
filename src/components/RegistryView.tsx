@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { CashFund, GiftItem, Registry } from "@/lib/types";
 import { formatINR, occasionLabel } from "@/lib/format";
+import { isUsableProductImage } from "@/lib/product-image";
 import { HeartField } from "./HeartField";
 import { GiftClaimModal } from "./GiftClaimModal";
 import { UpiContributeModal } from "./UpiContributeModal";
@@ -114,8 +115,16 @@ export function RegistryView({ initial }: { initial: Registry }) {
                   }`}
                 >
                   <div className="relative aspect-[16/11] overflow-hidden bg-mist">
-                    {item.imageUrl ? (
-                      <img src={item.imageUrl} alt="" className="h-full w-full object-cover" />
+                    {isUsableProductImage(item.imageUrl) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.imageUrl}
+                        alt=""
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
                     ) : null}
                     {item.storeName ? (
                       <span className="absolute right-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-medium">

@@ -1,5 +1,6 @@
 import * as cheerio from "cheerio";
 import { detectStore } from "./format";
+import { sanitizeProductImageUrl } from "./product-image";
 
 export type EnrichedProduct = {
   title: string;
@@ -65,11 +66,10 @@ function isBlockedHtml(html: string, status: number) {
   );
 }
 
-function isJunkImage(url?: string) {
-  if (!url) return true;
-  return /fls-.*\.amazon|\/uedata|pixel|sprite|transparent-pixel|grey-pixel|loading-|spinner/i.test(
-    url,
-  );
+function amazonImageFromAsin(asin?: string) {
+  if (!asin) return undefined;
+  // Public ASIN image pattern — works for many catalog products when HTML scrape is blocked.
+  return `https://m.media-amazon.com/images/P/${asin}.01._SCLZZZZZZZ_SX500_.jpg`;
 }
 
 function extractAmazonAsin(url: string) {
@@ -182,32 +182,58 @@ function parseProductHtml(html: string, baseUrl: string, storeName: string) {
     jsonLd.description ||
     undefined;
 
-  const dynamicImage = (() => {
-    const raw =
-      $("#landingImage").attr("data-old-hires") ||
-      $("#landingImage").attr("data-a-dynamic-image") ||
-      $("#imgBlkFront").attr("data-a-dynamic-image") ||
-      $("#imgTagWrapperId img").attr("data-a-dynamic-image");
-    if (!raw) return undefined;
-    if (raw.startsWith("http")) return raw;
-    try {
-      const map = JSON.parse(raw) as Record<string, number[]>;
-      return Object.keys(map).sort(
-        (a, b) => (map[b]?.[0] ?? 0) - (map[a]?.[0] ?? 0),
-      )[0];
-    } catch {
-      return undefined;
+  const dynamicImages = (() => {
+    const out: string[] = [];
+    const attrs = [
+      $("#landingImage").attr("data-old-hires"),
+      $("#landingImage").attr("data-a-dynamic-image"),
+      $("#imgBlkFront").attr("data-a-dynamic-image"),
+      $("#imgTagWrapperId img").attr("data-a-dynamic-image"),
+      $("img[data-a-dynamic-image]").first().attr("data-a-dynamic-image"),
+    ];
+    for (const raw of attrs) {
+      if (!raw) continue;
+      if (raw.startsWith("http")) {
+        out.push(raw);
+        continue;
+      }
+      try {
+        const map = JSON.parse(raw) as Record<string, number[]>;
+        out.push(
+          ...Object.keys(map).sort(
+            (a, b) => (map[b]?.[0] ?? 0) - (map[a]?.[0] ?? 0),
+          ),
+        );
+      } catch {
+        /* ignore */
+      }
     }
+    return out;
   })();
 
-  const ogImage =
-    dynamicImage ||
-    $("#landingImage").attr("src") ||
-    $("#imgTagWrapperId img").attr("src") ||
-    $('meta[property="og:image"]').attr("content") ||
-    $('meta[name="twitter:image"]').attr("content") ||
-    jsonLd.image ||
-    $("img[data-old-hires]").first().attr("data-old-hires");
+  const asin = extractAmazonAsin(baseUrl);
+  const imageCandidates = [
+    ...dynamicImages,
+    $("#landingImage").attr("src"),
+    $("#imgTagWrapperId img").attr("src"),
+    $('meta[property="og:image"]').attr("content"),
+    $('meta[name="twitter:image"]').attr("content"),
+    jsonLd.image,
+    $("img[data-old-hires]").first().attr("data-old-hires"),
+    // Prefer real media-amazon CDN URLs embedded in the page
+    ...($("img")
+      .toArray()
+      .map((el) => $(el).attr("src") || $(el).attr("data-src"))
+      .filter((src): src is string =>
+        Boolean(src && /media-amazon|ssl-images-amazon/i.test(src)),
+      ) as string[]),
+    amazonImageFromAsin(asin),
+  ]
+    .map((src) => absoluteUrl(baseUrl, src))
+    .map((src) => sanitizeProductImageUrl(src))
+    .filter((src): src is string => Boolean(src));
+
+  const safeImage = imageCandidates[0];
 
   const price = parsePrice(
     jsonLd.price,
@@ -224,9 +250,6 @@ function parseProductHtml(html: string, baseUrl: string, storeName: string) {
   if (!title || /amazon\.in|amazon\.com|flipkart/i.test(title)) {
     title = cleanTitle(titleFromAmazonSlug(baseUrl) || title);
   }
-
-  const imageUrl = absoluteUrl(baseUrl, ogImage);
-  const safeImage = isJunkImage(imageUrl) ? undefined : imageUrl;
 
   return {
     title: title || `${storeName} gift`,

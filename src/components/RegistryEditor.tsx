@@ -5,6 +5,7 @@ import { useState } from "react";
 import { nanoid } from "nanoid";
 import type { Registry } from "@/lib/types";
 import { formatINR } from "@/lib/format";
+import { isUsableProductImage } from "@/lib/product-image";
 
 export function RegistryEditor({ initial }: { initial: Registry }) {
   const [registry, setRegistry] = useState(initial);
@@ -281,8 +282,16 @@ export function RegistryEditor({ initial }: { initial: Registry }) {
         <ul className="space-y-3">
           {registry.items.map((item) => (
             <li key={item.id} className="flex gap-3 rounded-2xl border border-mist p-3">
-              {item.imageUrl ? (
-                <img src={item.imageUrl} alt="" className="h-16 w-16 rounded-xl object-cover" />
+              {isUsableProductImage(item.imageUrl) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={item.imageUrl}
+                  alt=""
+                  className="h-16 w-16 rounded-xl object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
               ) : (
                 <div className="h-16 w-16 rounded-xl bg-mist" />
               )}

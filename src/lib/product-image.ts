@@ -1,0 +1,64 @@
+/** Amazon tracking / pixel URLs that look like images but never render a product photo. */
+export function isUsableProductImage(url?: string | null): url is string {
+  if (!url) return false;
+  try {
+    const u = new URL(url);
+    const host = u.hostname.toLowerCase();
+    const path = `${u.pathname}${u.search}`.toLowerCase();
+    if (
+      host.startsWith("fls-") ||
+      host.includes("fls-eu.") ||
+      host.includes("fls-na.") ||
+      path.includes("/uedata") ||
+      path.includes("unpixel") ||
+      /pixel|sprite|transparent|grey-pixel|gray-pixel|spinner|loading-/.test(
+        path,
+      )
+    ) {
+      return false;
+    }
+    // Prefer real CDN product images
+    if (
+      host.includes("media-amazon") ||
+      host.includes("ssl-images-amazon") ||
+      host.includes("images-amazon") ||
+      host.includes("imgur") ||
+      host.includes("cloudinary") ||
+      host.includes("unsplash") ||
+      host.includes("neon.tech") ||
+      host.includes("flipkart") ||
+      host.includes("flixcart") ||
+      /\.(jpe?g|png|webp|gif)(\?|$)/i.test(path)
+    ) {
+      return true;
+    }
+    // Allow http(s) images that aren't known junk
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+export function sanitizeProductImageUrl(url?: string | null) {
+  return isUsableProductImage(url) ? url : undefined;
+}
+
+function extractAmazonAsin(url?: string) {
+  if (!url) return undefined;
+  const m =
+    url.match(/\/(?:dp|gp\/product|gp\/aw\/d|product)\/([A-Z0-9]{10})/i) ||
+    url.match(/[?&]asin=([A-Z0-9]{10})/i);
+  return m?.[1]?.toUpperCase();
+}
+
+/** Fix broken Amazon tracking URLs already saved on gift items. */
+export function repairGiftImageUrl(input: {
+  imageUrl?: string | null;
+  productUrl?: string | null;
+}) {
+  const sanitized = sanitizeProductImageUrl(input.imageUrl);
+  if (sanitized) return sanitized;
+  const asin = extractAmazonAsin(input.productUrl || undefined);
+  if (!asin) return undefined;
+  return `https://m.media-amazon.com/images/P/${asin}.01._SCLZZZZZZZ_SX500_.jpg`;
+}

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
+import { sanitizeProductImageUrl } from "@/lib/product-image";
 import { addGiftItem } from "@/lib/store";
 
 const schema = z.object({
@@ -23,7 +24,10 @@ export async function POST(
   const { id } = await params;
   try {
     const body = schema.parse(await req.json());
-    const item = await addGiftItem(id, session.id, body);
+    const item = await addGiftItem(id, session.id, {
+      ...body,
+      imageUrl: sanitizeProductImageUrl(body.imageUrl),
+    });
     if (!item) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
