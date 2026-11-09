@@ -38,3 +38,9 @@ Avoid: purple gradients, terracotta `#D97757`, Inter/Roboto, generic card grids 
 - Cards only for interactive gift / fund units
 - Mobile-first; iOS UPI flows get QR + app buttons + copy
 - Color bands (petal / sage / dusk) create scroll rhythm without card spam
+
+## Baby shower whimsy (occasion = baby_shower)
+- Storybook / invitation wall: parchment ground, forest **grove** (`#3F523F`), arched category cards with sage bows
+- Script accent: **Great Vibes** for “A Little One Is Almost Home”
+- Category explorer: illustrated arch tiles → filter gifts below
+- Keep Giftus rose CTAs on non-baby occasions; grove CTAs on baby shower pages

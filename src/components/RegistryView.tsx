@@ -13,23 +13,32 @@ import { HeartField } from "./HeartField";
 import { GiftClaimModal } from "./GiftClaimModal";
 import { UpiContributeModal } from "./UpiContributeModal";
 import { Reveal } from "./Reveal";
+import { WhimsicalCategories } from "./WhimsicalCategories";
 
 export function RegistryView({ initial }: { initial: Registry }) {
   const [registry, setRegistry] = useState(initial);
   const [filter, setFilter] = useState<"all" | "available" | "purchased">("all");
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [giftItem, setGiftItem] = useState<GiftItem | null>(null);
   const [fund, setFund] = useState<CashFund | null>(null);
   const [flashId, setFlashId] = useState<string | null>(null);
 
+  const whimsy = registry.occasion === "baby_shower";
+
   const filteredItems = useMemo(() => {
-    if (filter === "all") return registry.items;
+    let list = registry.items;
     if (filter === "available") {
-      return registry.items.filter(
+      list = list.filter(
         (i) => i.status === "available" || i.status === "reserved",
       );
+    } else if (filter === "purchased") {
+      list = list.filter((i) => i.status === "purchased");
     }
-    return registry.items.filter((i) => i.status === "purchased");
-  }, [filter, registry.items]);
+    if (activeCategoryId) {
+      list = list.filter((i) => i.categoryId === activeCategoryId);
+    }
+    return list;
+  }, [filter, registry.items, activeCategoryId]);
 
   const grouped = useMemo(
     () =>
@@ -45,14 +54,25 @@ export function RegistryView({ initial }: { initial: Registry }) {
     (i) => i.status === "purchased",
   ).length;
 
+  function highlight(id: string) {
+    setFlashId(id);
+    setTimeout(() => setFlashId(null), 1400);
+  }
+
+  function selectCategory(id: string) {
+    setActiveCategoryId((prev) => (prev === id ? null : id));
+    const el = document.getElementById("registry-gifts");
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   function renderGiftCard(item: GiftItem, index: number) {
     const claimed = item.status === "purchased";
     return (
       <Reveal key={item.id} delay={(index % 4) * 70}>
         <article
           className={`gift-card overflow-hidden rounded-[1.75rem] bg-white shadow-[0_12px_40px_rgba(28,20,16,0.06)] ${
-            flashId === item.id ? "claim-highlight" : ""
-          }`}
+            whimsy ? "border border-grove/10" : ""
+          } ${flashId === item.id ? "claim-highlight" : ""}`}
         >
           <div className="relative aspect-[16/11] overflow-hidden bg-gradient-to-br from-mist to-petal">
             {(() => {
@@ -114,7 +134,11 @@ export function RegistryView({ initial }: { initial: Registry }) {
                 <button
                   type="button"
                   onClick={() => setGiftItem(item)}
-                  className="btn-glow rounded-full bg-rose px-4 py-2 text-sm font-semibold text-white hover:bg-rose-deep"
+                  className={`btn-glow rounded-full px-4 py-2 text-sm font-semibold text-white ${
+                    whimsy
+                      ? "bg-grove hover:bg-grove-deep"
+                      : "bg-rose hover:bg-rose-deep"
+                  }`}
                 >
                   Gift this
                 </button>
@@ -126,13 +150,8 @@ export function RegistryView({ initial }: { initial: Registry }) {
     );
   }
 
-  function highlight(id: string) {
-    setFlashId(id);
-    setTimeout(() => setFlashId(null), 1400);
-  }
-
   return (
-    <div className="min-h-full">
+    <div className={`min-h-full ${whimsy ? "whimsy-shell" : ""}`}>
       <div className="relative isolate overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -140,7 +159,13 @@ export function RegistryView({ initial }: { initial: Registry }) {
           alt=""
           className="ken-burns absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-dusk via-ink/55 to-ink/20" />
+        <div
+          className={`absolute inset-0 ${
+            whimsy
+              ? "bg-gradient-to-t from-[#2f3e2f] via-[#2f3e2f]/55 to-[#2f3e2f]/20"
+              : "bg-gradient-to-t from-dusk via-ink/55 to-ink/20"
+          }`}
+        />
         <div
           className="float-orb left-[10%] top-[30%] h-44 w-44 bg-rose/35"
           style={{ animationDelay: "0.4s" }}
@@ -157,11 +182,27 @@ export function RegistryView({ initial }: { initial: Registry }) {
           >
             Giftus
           </Link>
-          <span className="animate-soft-in inline-flex w-fit rounded-full bg-gradient-to-r from-gold to-marigold px-3.5 py-1 text-sm font-medium text-ink shadow-[0_8px_24px_rgba(168,137,74,0.35)]">
+          <span
+            className={`animate-soft-in inline-flex w-fit rounded-full px-3.5 py-1 text-sm font-medium shadow-[0_8px_24px_rgba(168,137,74,0.35)] ${
+              whimsy
+                ? "bg-parchment text-grove"
+                : "bg-gradient-to-r from-gold to-marigold text-ink"
+            }`}
+          >
             {occasionLabel(registry.occasion)}
           </span>
+          {whimsy ? (
+            <p
+              className="animate-soft-in mt-5 font-script text-4xl text-parchment md:text-6xl"
+              style={{ animationDelay: "60ms" }}
+            >
+              A Little One Is Almost Home
+            </p>
+          ) : null}
           <h1
-            className="animate-soft-in mt-4 font-display text-4xl text-white md:text-6xl"
+            className={`animate-soft-in mt-3 font-display text-4xl text-white md:text-6xl ${
+              whimsy ? "md:text-5xl" : ""
+            }`}
             style={{ animationDelay: "90ms" }}
           >
             {registry.title}
@@ -170,16 +211,50 @@ export function RegistryView({ initial }: { initial: Registry }) {
             className="animate-soft-in mt-3 max-w-2xl text-white/85"
             style={{ animationDelay: "160ms" }}
           >
-            {[registry.location, registry.eventDate].filter(Boolean).join(" · ")}
+            {whimsy
+              ? "Our registry for the newest member of our family."
+              : [registry.location, registry.eventDate]
+                  .filter(Boolean)
+                  .join(" · ")}
           </p>
+          {whimsy ? (
+            <a
+              href="#registry-categories"
+              className="animate-soft-in mt-7 inline-flex w-fit items-center gap-2 rounded-full bg-grove px-5 py-3 text-sm font-semibold text-parchment shadow-[0_12px_28px_rgba(47,62,47,0.35)] transition hover:bg-grove-deep"
+              style={{ animationDelay: "220ms" }}
+            >
+              Explore the Registry
+              <span aria-hidden>→</span>
+            </a>
+          ) : null}
         </div>
       </div>
 
+      {whimsy && (registry.categories || []).length > 0 ? (
+        <div id="registry-categories">
+          <WhimsicalCategories
+            categories={registry.categories || []}
+            items={registry.items}
+            activeId={activeCategoryId}
+            onSelect={selectCategory}
+          />
+        </div>
+      ) : null}
+
       <div className="mx-auto max-w-5xl px-5 py-10 md:px-8">
         <Reveal>
-          <p className="max-w-3xl text-lg leading-relaxed text-ink/80">
-            {registry.story}
-          </p>
+          <div className={whimsy ? "whimsy-hero-frame rounded-[1.75rem] p-6 md:p-8" : ""}>
+            <p className="max-w-3xl text-lg leading-relaxed text-ink/80">
+              {registry.story}
+            </p>
+            {whimsy && (registry.location || registry.eventDate) ? (
+              <p className="mt-3 text-sm text-grove/70">
+                {[registry.location, registry.eventDate]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            ) : null}
+          </div>
         </Reveal>
 
         {registry.photos.length > 0 ? (
@@ -190,7 +265,13 @@ export function RegistryView({ initial }: { initial: Registry }) {
             <div className="mt-6 grid gap-4 sm:grid-cols-3">
               {registry.photos.map((photo, i) => (
                 <Reveal key={photo.id} delay={i * 90} variant="scale">
-                  <figure className="group overflow-hidden rounded-[1.5rem]">
+                  <figure
+                    className={`group overflow-hidden ${
+                      whimsy
+                        ? "whimsy-hero-frame rounded-[1.25rem] p-2"
+                        : "rounded-[1.5rem]"
+                    }`}
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={photo.url}
@@ -209,16 +290,37 @@ export function RegistryView({ initial }: { initial: Registry }) {
           </section>
         ) : null}
 
-        <section className="mt-16">
+        <section id="registry-gifts" className="mt-16 scroll-mt-24">
           <Reveal>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <h2 className="font-display text-3xl text-ink">Gifts</h2>
+                <h2
+                  className={`font-display text-3xl ${
+                    whimsy ? "text-grove-deep" : "text-ink"
+                  }`}
+                >
+                  {whimsy ? "The Registry" : "Gifts"}
+                </h2>
                 <p className="mt-1 text-sm text-ink/60">
                   {purchasedCount} of {registry.items.length} gifted
+                  {activeCategoryId
+                    ? ` · ${
+                        registry.categories.find((c) => c.id === activeCategoryId)
+                          ?.name || "Category"
+                      }`
+                    : ""}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
+                {activeCategoryId ? (
+                  <button
+                    type="button"
+                    onClick={() => setActiveCategoryId(null)}
+                    className="rounded-full border border-grove/20 bg-parchment px-4 py-2 text-sm text-grove"
+                  >
+                    All categories
+                  </button>
+                ) : null}
                 {(["all", "available", "purchased"] as const).map((key) => (
                   <button
                     key={key}
@@ -226,7 +328,9 @@ export function RegistryView({ initial }: { initial: Registry }) {
                     onClick={() => setFilter(key)}
                     className={`rounded-full px-4 py-2 text-sm capitalize transition ${
                       filter === key
-                        ? "bg-ink text-paper shadow-[0_8px_20px_rgba(28,20,16,0.18)]"
+                        ? whimsy
+                          ? "bg-grove text-parchment shadow-[0_8px_20px_rgba(47,62,47,0.2)]"
+                          : "bg-ink text-paper shadow-[0_8px_20px_rgba(28,20,16,0.18)]"
                         : "bg-mist text-ink/70 hover:bg-blush/60"
                     }`}
                   >
@@ -238,54 +342,71 @@ export function RegistryView({ initial }: { initial: Registry }) {
           </Reveal>
 
           <div className="mt-8 space-y-12">
-            {grouped.groups.map(({ category, imageUrl, items }) =>
-              items.length > 0 ? (
-                <div key={category.id}>
-                  <Reveal>
-                    <div className="mb-5 flex items-center gap-4">
-                      <div className="relative h-16 w-16 overflow-hidden rounded-2xl bg-mist shadow-[0_8px_24px_rgba(28,20,16,0.08)]">
-                        {isUsableProductImage(imageUrl) ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={imageUrl}
-                            alt=""
-                            className="h-full w-full object-cover"
-                          />
-                        ) : null}
-                      </div>
-                      <div>
-                        <h3 className="font-display text-2xl text-ink">
-                          {category.name}
-                        </h3>
-                        <p className="text-sm text-ink/55">
-                          {items.length} gift{items.length === 1 ? "" : "s"}
-                        </p>
+            {whimsy && activeCategoryId ? (
+              <div className="grid gap-5 sm:grid-cols-2">
+                {filteredItems.map((item, i) => renderGiftCard(item, i))}
+              </div>
+            ) : (
+              <>
+                {grouped.groups.map(({ category, imageUrl, items }) =>
+                  items.length > 0 ? (
+                    <div key={category.id} id={`category-${category.id}`}>
+                      {!whimsy ? (
+                        <Reveal>
+                          <div className="mb-5 flex items-center gap-4">
+                            <div className="relative h-16 w-16 overflow-hidden rounded-2xl bg-mist shadow-[0_8px_24px_rgba(28,20,16,0.08)]">
+                              {isUsableProductImage(imageUrl) ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={imageUrl}
+                                  alt=""
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : null}
+                            </div>
+                            <div>
+                              <h3 className="font-display text-2xl text-ink">
+                                {category.name}
+                              </h3>
+                              <p className="text-sm text-ink/55">
+                                {items.length} gift
+                                {items.length === 1 ? "" : "s"}
+                              </p>
+                            </div>
+                          </div>
+                        </Reveal>
+                      ) : (
+                        <Reveal>
+                          <h3 className="mb-5 font-display text-2xl text-grove-deep">
+                            {category.name}
+                          </h3>
+                        </Reveal>
+                      )}
+                      <div className="grid gap-5 sm:grid-cols-2">
+                        {items.map((item, i) => renderGiftCard(item, i))}
                       </div>
                     </div>
-                  </Reveal>
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    {items.map((item, i) => renderGiftCard(item, i))}
-                  </div>
-                </div>
-              ) : null,
-            )}
+                  ) : null,
+                )}
 
-            {grouped.uncategorized.length > 0 ? (
-              <div>
-                {(registry.categories || []).length > 0 ? (
-                  <Reveal>
-                    <h3 className="mb-5 font-display text-2xl text-ink">
-                      More gifts
-                    </h3>
-                  </Reveal>
+                {grouped.uncategorized.length > 0 ? (
+                  <div>
+                    {(registry.categories || []).length > 0 ? (
+                      <Reveal>
+                        <h3 className="mb-5 font-display text-2xl text-ink">
+                          More gifts
+                        </h3>
+                      </Reveal>
+                    ) : null}
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      {grouped.uncategorized.map((item, i) =>
+                        renderGiftCard(item, i),
+                      )}
+                    </div>
+                  </div>
                 ) : null}
-                <div className="grid gap-5 sm:grid-cols-2">
-                  {grouped.uncategorized.map((item, i) =>
-                    renderGiftCard(item, i),
-                  )}
-                </div>
-              </div>
-            ) : null}
+              </>
+            )}
 
             {filteredItems.length === 0 ? (
               <p className="text-sm text-ink/55">No gifts in this filter.</p>

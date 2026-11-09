@@ -15,6 +15,10 @@ export function isUsableProductImage(url?: string | null): url is string {
   if (raw.includes("/images/p/")) {
     return false;
   }
+  // Local public assets (whimsical category art, uploads mirrored under /)
+  if (raw.startsWith("/whimsy/") || raw.startsWith("/uploads/")) {
+    return true;
+  }
   try {
     const u = new URL(url);
     const host = u.hostname.toLowerCase();

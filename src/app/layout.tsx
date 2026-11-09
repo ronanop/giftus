@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Figtree, Fraunces } from "next/font/google";
+import { Figtree, Fraunces, Great_Vibes } from "next/font/google";
 import "./globals.css";
 
 const figtree = Figtree({
@@ -10,6 +10,13 @@ const figtree = Figtree({
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const greatVibes = Great_Vibes({
+  variable: "--font-great-vibes",
+  weight: "400",
   subsets: ["latin"],
   display: "swap",
 });
@@ -30,7 +37,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${figtree.variable} ${fraunces.variable} h-full`}>
+    <html
+      lang="en"
+      className={`${figtree.variable} ${fraunces.variable} ${greatVibes.variable} h-full`}
+    >
       <body className="min-h-full antialiased giftus-shell">{children}</body>
     </html>
   );
