@@ -34,13 +34,35 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-full max-w-md flex-col justify-center px-5 py-16">
-      <Link href="/" className="font-display text-2xl text-ink">
+    <div className="relative mx-auto flex min-h-full max-w-md flex-col justify-center px-5 py-16">
+      <div
+        className="float-orb -z-10 left-[-16%] top-[14%] h-44 w-44 bg-petal"
+        aria-hidden
+      />
+      <div
+        className="float-orb -z-10 right-[-12%] bottom-[16%] h-52 w-52 bg-gold/25"
+        aria-hidden
+      />
+      <Link href="/" className="animate-soft-in font-display text-2xl text-ink">
         Giftus
       </Link>
-      <h1 className="mt-8 font-display text-4xl text-ink">Create account</h1>
-      <p className="mt-2 text-ink/65">Full control over your personalized registry.</p>
-      <form onSubmit={onSubmit} className="mt-8 space-y-4">
+      <h1
+        className="animate-soft-in mt-8 font-display text-4xl text-ink"
+        style={{ animationDelay: "80ms" }}
+      >
+        Create account
+      </h1>
+      <p
+        className="animate-soft-in mt-2 text-ink/65"
+        style={{ animationDelay: "140ms" }}
+      >
+        Full control over your personalized registry.
+      </p>
+      <form
+        onSubmit={onSubmit}
+        className="animate-soft-in mt-8 space-y-4 rounded-[1.75rem] border border-mist/80 bg-white/80 p-6 shadow-[0_16px_40px_rgba(28,20,16,0.06)] backdrop-blur"
+        style={{ animationDelay: "200ms" }}
+      >
         <label className="block text-sm">
           <span className="text-ink/60">Full name</span>
           <input
@@ -75,7 +97,7 @@ export default function SignupPage() {
         <button
           disabled={busy}
           type="submit"
-          className="w-full rounded-full bg-rose px-4 py-3 text-sm font-semibold text-white hover:bg-rose-deep disabled:opacity-50"
+          className="btn-glow w-full rounded-full bg-rose px-4 py-3 text-sm font-semibold text-white hover:bg-rose-deep disabled:opacity-50"
         >
           {busy ? "Creating…" : "Create account"}
         </button>

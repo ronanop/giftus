@@ -33,13 +33,35 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-full max-w-md flex-col justify-center px-5 py-16">
-      <Link href="/" className="font-display text-2xl text-ink">
+    <div className="relative mx-auto flex min-h-full max-w-md flex-col justify-center px-5 py-16">
+      <div
+        className="float-orb -z-10 left-[-20%] top-[18%] h-40 w-40 bg-rose/25"
+        aria-hidden
+      />
+      <div
+        className="float-orb -z-10 right-[-10%] bottom-[20%] h-48 w-48 bg-marigold/20"
+        aria-hidden
+      />
+      <Link href="/" className="animate-soft-in font-display text-2xl text-ink">
         Giftus
       </Link>
-      <h1 className="mt-8 font-display text-4xl text-ink">Welcome back</h1>
-      <p className="mt-2 text-ink/65">Sign in to manage your registries.</p>
-      <form onSubmit={onSubmit} className="mt-8 space-y-4">
+      <h1
+        className="animate-soft-in mt-8 font-display text-4xl text-ink"
+        style={{ animationDelay: "80ms" }}
+      >
+        Welcome back
+      </h1>
+      <p
+        className="animate-soft-in mt-2 text-ink/65"
+        style={{ animationDelay: "140ms" }}
+      >
+        Sign in to manage your registries.
+      </p>
+      <form
+        onSubmit={onSubmit}
+        className="animate-soft-in mt-8 space-y-4 rounded-[1.75rem] border border-mist/80 bg-white/80 p-6 shadow-[0_16px_40px_rgba(28,20,16,0.06)] backdrop-blur"
+        style={{ animationDelay: "200ms" }}
+      >
         <label className="block text-sm">
           <span className="text-ink/60">Email</span>
           <input
@@ -64,7 +86,7 @@ export default function LoginPage() {
         <button
           disabled={busy}
           type="submit"
-          className="w-full rounded-full bg-ink px-4 py-3 text-sm font-semibold text-paper disabled:opacity-50"
+          className="btn-glow w-full rounded-full bg-ink px-4 py-3 text-sm font-semibold text-paper hover:bg-dusk disabled:opacity-50"
         >
           {busy ? "Signing in…" : "Sign in"}
         </button>

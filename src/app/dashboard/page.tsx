@@ -21,7 +21,7 @@ export default async function DashboardPage() {
           </div>
           <Link
             href="/dashboard/new"
-            className="rounded-full bg-rose px-5 py-3 text-sm font-semibold text-white hover:bg-rose-deep"
+            className="btn-glow rounded-full bg-rose px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_28px_rgba(184,74,94,0.28)] hover:bg-rose-deep"
           >
             New registry
           </Link>
@@ -44,7 +44,7 @@ export default async function DashboardPage() {
               <Link
                 key={r.id}
                 href={`/dashboard/${r.id}`}
-                className="flex flex-col gap-3 rounded-[1.5rem] bg-white p-5 shadow-[0_10px_30px_rgba(28,20,16,0.05)] transition hover:-translate-y-0.5 sm:flex-row sm:items-center sm:justify-between"
+                className="gift-card flex flex-col gap-3 rounded-[1.5rem] border border-mist/60 bg-white/90 p-5 shadow-[0_10px_30px_rgba(28,20,16,0.05)] sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
                   <p className="text-sm text-sage">{occasionLabel(r.occasion)}</p>
