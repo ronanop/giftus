@@ -5,6 +5,7 @@ import { getDb } from "./db/client";
 import { registries, users } from "./db/schema";
 import { slugify } from "./format";
 import { resolveGiftImageUrl } from "./amazon-image";
+import { enrichProductUrl } from "./enrich";
 import {
   amazonNeedsImageResolve,
   sanitizeProductImageUrl,
@@ -46,23 +47,56 @@ function rowToRegistry(row: typeof registries.$inferSelect): Registry {
   };
 }
 
-async function hydrateRegistryImages(registry: Registry): Promise<Registry> {
+async function hydrateRegistryItems(registry: Registry): Promise<Registry> {
   let changed = false;
   const items = await Promise.all(
     registry.items.map(async (item) => {
-      if (sanitizeProductImageUrl(item.imageUrl)) return item;
-      if (!amazonNeedsImageResolve(item)) {
-        return { ...item, imageUrl: undefined };
+      let next = {
+        ...item,
+        imageUrl: sanitizeProductImageUrl(item.imageUrl),
+      };
+
+      if (!next.imageUrl && amazonNeedsImageResolve(item)) {
+        const imageUrl = await resolveGiftImageUrl({
+          imageUrl: item.imageUrl,
+          productUrl: item.productUrl,
+        });
+        if (imageUrl) {
+          next = { ...next, imageUrl };
+          changed = true;
+        }
       }
-      const imageUrl = await resolveGiftImageUrl({
-        imageUrl: item.imageUrl,
-        productUrl: item.productUrl,
-      });
-      if (imageUrl) {
+
+      // Backfill missing store prices (FirstCry often needs MRP + Dis parsing).
+      if (
+        (!next.price || next.price <= 0) &&
+        next.productUrl &&
+        /firstcry\.com|flipkart\.com|myntra\.com/i.test(next.productUrl)
+      ) {
+        try {
+          const enriched = await enrichProductUrl(next.productUrl);
+          if (enriched.price && enriched.price > 0) {
+            next = {
+              ...next,
+              price: enriched.price,
+              imageUrl: next.imageUrl || enriched.imageUrl,
+              title:
+                next.title === "Amazon gift" ||
+                next.title === `${next.storeName} gift`
+                  ? enriched.title
+                  : next.title,
+            };
+            changed = true;
+          }
+        } catch {
+          /* keep existing */
+        }
+      }
+
+      if (next.imageUrl !== item.imageUrl || next.price !== item.price) {
         changed = true;
-        return { ...item, imageUrl };
       }
-      return { ...item, imageUrl: undefined };
+      return next;
     }),
   );
 
@@ -139,7 +173,7 @@ export async function getRegistryBySlug(slug: string) {
     where: eq(registries.slug, slug),
   });
   if (!row) return null;
-  return hydrateRegistryImages(rowToRegistry(row));
+  return hydrateRegistryItems(rowToRegistry(row));
 }
 
 export async function getRegistryById(id: string) {
@@ -148,7 +182,7 @@ export async function getRegistryById(id: string) {
     where: eq(registries.id, id),
   });
   if (!row) return null;
-  return hydrateRegistryImages(rowToRegistry(row));
+  return hydrateRegistryItems(rowToRegistry(row));
 }
 
 export async function searchPublicRegistries(query: string) {

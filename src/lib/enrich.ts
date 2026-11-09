@@ -52,6 +52,83 @@ function parsePrice(...candidates: Array<string | undefined | null>) {
   return undefined;
 }
 
+function extractFirstCryProductId(url: string) {
+  const m =
+    url.match(/\/(\d{5,})\/product-detail/i) ||
+    url.match(/[?&](?:pid|productid|product_id)=(\d{5,})/i);
+  return m?.[1];
+}
+
+/**
+ * FirstCry embeds size variants as `"22982527":{...,"mrp":2499,"Dis":15,...}`.
+ * Selling price is MRP minus Dis%.
+ */
+export function extractFirstCryPrice(html: string, productUrl: string) {
+  const productId = extractFirstCryProductId(productUrl);
+  if (!productId) {
+    const mrp = html.match(/"mrp"\s*:\s*([\d.]+)/i)?.[1];
+    const dis = html.match(/"Dis"\s*:\s*([\d.]+)/)?.[1];
+    return priceFromMrpDiscount(mrp, dis);
+  }
+
+  const marker = `"${productId}":{`;
+  const start = html.indexOf(marker);
+  if (start >= 0) {
+    let depth = 0;
+    let end = start + marker.length - 1;
+    for (let i = start + marker.length - 1; i < html.length; i++) {
+      const ch = html[i];
+      if (ch === "{") depth++;
+      if (ch === "}") {
+        depth--;
+        if (depth === 0) {
+          end = i;
+          break;
+        }
+      }
+    }
+    const block = html.slice(start + marker.length - 1, end + 1);
+    try {
+      const obj = JSON.parse(block) as {
+        mrp?: number | string;
+        MRP?: number | string;
+        Dis?: number | string;
+        SDis?: number | string;
+        clubDisc?: number | string;
+      };
+      const mrp = obj.mrp ?? obj.MRP;
+      const dis = obj.Dis ?? obj.SDis ?? obj.clubDisc;
+      const price = priceFromMrpDiscount(mrp, dis);
+      if (price) return price;
+    } catch {
+      /* fall through */
+    }
+  }
+
+  // Fallback: first mrp/Dis pair near this product id
+  const near = html.slice(
+    Math.max(0, start >= 0 ? start : html.indexOf(productId)),
+    (start >= 0 ? start : html.indexOf(productId)) + 2500,
+  );
+  return priceFromMrpDiscount(
+    near.match(/"mrp"\s*:\s*([\d.]+)/i)?.[1],
+    near.match(/"Dis"\s*:\s*([\d.]+)/)?.[1],
+  );
+}
+
+function priceFromMrpDiscount(
+  mrpRaw?: string | number | null,
+  disRaw?: string | number | null,
+) {
+  const mrp = Number(mrpRaw);
+  if (!Number.isFinite(mrp) || mrp <= 0) return undefined;
+  const dis = Number(disRaw);
+  if (Number.isFinite(dis) && dis > 0 && dis < 100) {
+    return Math.round((mrp * (100 - dis)) / 100);
+  }
+  return Math.round(mrp);
+}
+
 function cleanTitle(raw?: string | null) {
   if (!raw) return "";
   return raw
@@ -229,14 +306,25 @@ function parseProductHtml(html: string, baseUrl: string, storeName: string) {
 
   const safeImage = imageCandidates[0];
 
+  const firstCryPrice =
+    /firstcry\.com/i.test(baseUrl) || storeName === "FirstCry"
+      ? extractFirstCryPrice(html, baseUrl)
+      : undefined;
+
   const price = parsePrice(
+    firstCryPrice != null ? String(firstCryPrice) : undefined,
     jsonLd.price,
     $('meta[property="product:price:amount"]').attr("content"),
+    $('meta[itemprop="price"]').attr("content"),
+    $("[itemprop=price]").attr("content"),
     $(".a-price .a-offscreen").first().text(),
     $("#priceblock_ourprice").text(),
     $("#priceblock_dealprice").text(),
     $(".priceToPay .a-offscreen").first().text(),
     $("#corePrice_feature_div .a-offscreen").first().text(),
+    // Flipkart / generic
+    $("div._30jeq3").first().text(),
+    $('[class*="selling-price"]').first().text(),
     $('[class*="price"]').first().text(),
   );
 
