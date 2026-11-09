@@ -4,7 +4,11 @@ import bcrypt from "bcryptjs";
 import { getDb } from "./db/client";
 import { registries, users } from "./db/schema";
 import { slugify } from "./format";
-import { repairGiftImageUrl } from "./product-image";
+import { resolveGiftImageUrl } from "./amazon-image";
+import {
+  amazonNeedsImageResolve,
+  sanitizeProductImageUrl,
+} from "./product-image";
 import type {
   CashFund,
   GiftItem,
@@ -18,10 +22,7 @@ function rowToRegistry(row: typeof registries.$inferSelect): Registry {
   const items = (((row.items as GiftItem[] | null) ?? []) as GiftItem[]).map(
     (item) => ({
       ...item,
-      imageUrl: repairGiftImageUrl({
-        imageUrl: item.imageUrl,
-        productUrl: item.productUrl,
-      }),
+      imageUrl: sanitizeProductImageUrl(item.imageUrl),
     }),
   );
   return {
@@ -43,6 +44,37 @@ function rowToRegistry(row: typeof registries.$inferSelect): Registry {
     createdAt: row.createdAt?.toISOString() ?? new Date().toISOString(),
     updatedAt: row.updatedAt?.toISOString() ?? new Date().toISOString(),
   };
+}
+
+async function hydrateRegistryImages(registry: Registry): Promise<Registry> {
+  let changed = false;
+  const items = await Promise.all(
+    registry.items.map(async (item) => {
+      if (sanitizeProductImageUrl(item.imageUrl)) return item;
+      if (!amazonNeedsImageResolve(item)) {
+        return { ...item, imageUrl: undefined };
+      }
+      const imageUrl = await resolveGiftImageUrl({
+        imageUrl: item.imageUrl,
+        productUrl: item.productUrl,
+      });
+      if (imageUrl) {
+        changed = true;
+        return { ...item, imageUrl };
+      }
+      return { ...item, imageUrl: undefined };
+    }),
+  );
+
+  if (!changed) return { ...registry, items };
+
+  const db = await getDb();
+  await db
+    .update(registries)
+    .set({ items, updatedAt: new Date() })
+    .where(eq(registries.id, registry.id));
+
+  return { ...registry, items };
 }
 
 export async function createUser(input: {
@@ -106,7 +138,8 @@ export async function getRegistryBySlug(slug: string) {
   const row = await db.query.registries.findFirst({
     where: eq(registries.slug, slug),
   });
-  return row ? rowToRegistry(row) : null;
+  if (!row) return null;
+  return hydrateRegistryImages(rowToRegistry(row));
 }
 
 export async function getRegistryById(id: string) {
@@ -114,7 +147,8 @@ export async function getRegistryById(id: string) {
   const row = await db.query.registries.findFirst({
     where: eq(registries.id, id),
   });
-  return row ? rowToRegistry(row) : null;
+  if (!row) return null;
+  return hydrateRegistryImages(rowToRegistry(row));
 }
 
 export async function searchPublicRegistries(query: string) {

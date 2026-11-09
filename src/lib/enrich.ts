@@ -1,4 +1,8 @@
 import * as cheerio from "cheerio";
+import {
+  extractAmazonAsin,
+  extractAmazonImageUrls,
+} from "./amazon-image";
 import { detectStore } from "./format";
 import { sanitizeProductImageUrl } from "./product-image";
 
@@ -66,18 +70,6 @@ function isBlockedHtml(html: string, status: number) {
   );
 }
 
-function amazonImageFromAsin(asin?: string) {
-  if (!asin) return undefined;
-  // Public ASIN image pattern — works for many catalog products when HTML scrape is blocked.
-  return `https://m.media-amazon.com/images/P/${asin}.01._SCLZZZZZZZ_SX500_.jpg`;
-}
-
-function extractAmazonAsin(url: string) {
-  const m =
-    url.match(/\/(?:dp|gp\/product|gp\/aw\/d|product)\/([A-Z0-9]{10})/i) ||
-    url.match(/[?&]asin=([A-Z0-9]{10})/i);
-  return m?.[1]?.toUpperCase();
-}
 
 function titleFromAmazonSlug(url: string) {
   try {
@@ -210,8 +202,9 @@ function parseProductHtml(html: string, baseUrl: string, storeName: string) {
     return out;
   })();
 
-  const asin = extractAmazonAsin(baseUrl);
   const imageCandidates = [
+    // Prefer real listing photos (`/images/I/...`), not catalog `/images/P/` placeholders
+    ...extractAmazonImageUrls(html),
     ...dynamicImages,
     $("#landingImage").attr("src"),
     $("#imgTagWrapperId img").attr("src"),
@@ -219,14 +212,16 @@ function parseProductHtml(html: string, baseUrl: string, storeName: string) {
     $('meta[name="twitter:image"]').attr("content"),
     jsonLd.image,
     $("img[data-old-hires]").first().attr("data-old-hires"),
-    // Prefer real media-amazon CDN URLs embedded in the page
     ...($("img")
       .toArray()
       .map((el) => $(el).attr("src") || $(el).attr("data-src"))
       .filter((src): src is string =>
-        Boolean(src && /media-amazon|ssl-images-amazon/i.test(src)),
+        Boolean(
+          src &&
+            /media-amazon\.com\/images\/I\//i.test(src) &&
+            !/\/images\/P\//i.test(src),
+        ),
       ) as string[]),
-    amazonImageFromAsin(asin),
   ]
     .map((src) => absoluteUrl(baseUrl, src))
     .map((src) => sanitizeProductImageUrl(src))

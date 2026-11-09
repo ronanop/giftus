@@ -11,6 +11,10 @@ export function isUsableProductImage(url?: string | null): url is string {
   ) {
     return false;
   }
+  // Catalog P/ URLs are often 1x1 blank GIFs for marketplace ASINs — never show them.
+  if (raw.includes("/images/p/")) {
+    return false;
+  }
   try {
     const u = new URL(url);
     const host = u.hostname.toLowerCase();
@@ -56,14 +60,25 @@ function extractAmazonAsin(url?: string) {
   return m?.[1]?.toUpperCase();
 }
 
-/** Fix broken Amazon tracking URLs already saved on gift items. */
+/**
+ * Sync repair only filters junk. Real Amazon `/images/I/` resolution is async
+ * (see resolveGiftImageUrl) because catalog `/images/P/` URLs are often blank.
+ */
 export function repairGiftImageUrl(input: {
   imageUrl?: string | null;
   productUrl?: string | null;
 }) {
-  const sanitized = sanitizeProductImageUrl(input.imageUrl);
-  if (sanitized) return sanitized;
-  const asin = extractAmazonAsin(input.productUrl || undefined);
-  if (!asin) return undefined;
-  return `https://m.media-amazon.com/images/P/${asin}.01._SCLZZZZZZZ_SX500_.jpg`;
+  return sanitizeProductImageUrl(input.imageUrl);
+}
+
+export function amazonNeedsImageResolve(input: {
+  imageUrl?: string | null;
+  productUrl?: string | null;
+}) {
+  if (sanitizeProductImageUrl(input.imageUrl)) return false;
+  return Boolean(
+    input.productUrl &&
+      /amazon\.|amzn\./i.test(input.productUrl) &&
+      extractAmazonAsin(input.productUrl),
+  );
 }
