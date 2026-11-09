@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #fbf7f2;
+  --ink: #1c1410;
+  --rose: #b84a5e;
+  --rose-deep: #8f3345;
+  --petal: #f8e8ec;
+  --sage: #4a5d4e;
+  --gold: #a8894a;
+  --mist: #efe8e1;
+  --white: #ffffff;
+  --focus: #b84a5e;
+  --selection: #f3d0d7;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-rose: var(--rose);
+  --color-rose-deep: var(--rose-deep);
+  --color-petal: var(--petal);
+  --color-sage: var(--sage);
+  --color-gold: var(--gold);
+  --color-mist: var(--mist);
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-figtree);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-figtree), system-ui, sans-serif;
+  min-height: 100%;
+}
+
+::selection {
+  background: var(--selection);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-optical-sizing: auto;
+}
+
+.giftus-shell {
+  background:
+    radial-gradient(1200px 500px at 10% -10%, rgba(184, 74, 94, 0.08), transparent 60%),
+    radial-gradient(900px 400px at 100% 0%, rgba(168, 137, 74, 0.08), transparent 55%),
+    var(--paper);
+}
+
+.heart-float {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  color: var(--rose);
+  opacity: 0;
+  animation: heart-rise 7s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes heart-rise {
+  0% {
+    transform: translateY(20px) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateY(-120px) scale(1.1);
+    opacity: 0;
+  }
+}
+
+@keyframes soft-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-soft-in {
+  animation: soft-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes claim-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(184, 74, 94, 0.35);
+  }
+  100% {
+    box-shadow: 0 0 0 16px rgba(184, 74, 94, 0);
+  }
+}
+
+.claim-highlight {
+  animation: claim-pulse 1.2s ease-out 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .heart-float,
+  .animate-soft-in,
+  .claim-highlight {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

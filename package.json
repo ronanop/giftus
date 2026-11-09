@@ -1,0 +1,51 @@
+{
+  "name": "giftus",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "db:push": "npx tsx scripts/migrate.ts",
+    "db:seed": "npx tsx scripts/seed.ts",
+    "db:setup": "npm run db:push && npm run db:seed"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1164.0",
+    "@aws-sdk/s3-presigned-post": "^3.1164.0",
+    "@aws-sdk/s3-request-presigner": "^3.1164.0",
+    "@neon/config": "^1.13.0",
+    "@neon/env": "^2.1.0",
+    "@neondatabase/serverless": "^1.2.0",
+    "@vercel/functions": "^3.11.0",
+    "bcryptjs": "^3.0.3",
+    "cheerio": "^1.2.0",
+    "drizzle-orm": "^0.45.4",
+    "files-sdk": "^3.1.2",
+    "framer-motion": "^14.10.1",
+    "jose": "^6.2.16",
+    "nanoid": "^6.0.2",
+    "next": "16.4.5",
+    "pg": "^8.23.1",
+    "qrcode.react": "^4.2.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/turbopack": "^4",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "dotenv": "^18.0.10",
+    "drizzle-kit": "^0.31.11",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.5",
+    "tailwindcss": "^4",
+    "tsx": "^4.23.15",
+    "typescript": "^5"
+  }
+}
