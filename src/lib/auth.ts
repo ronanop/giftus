@@ -3,11 +3,11 @@ import { cookies } from "next/headers";
 import type { SessionUser } from "./types";
 import { getUserById } from "./store";
 
-const COOKIE = "giftus_session";
+const COOKIE = "shubhsagan_session";
 
 function secret() {
   const value =
-    process.env.AUTH_SECRET || "giftus-dev-secret-change-me-before-prod";
+    process.env.AUTH_SECRET || "shubhsagan-dev-secret-change-me-before-prod";
   return new TextEncoder().encode(value);
 }
 

@@ -15,7 +15,7 @@ async function main() {
   const pool = await createNeonPool(url);
   const db = drizzle({ client: pool, schema });
 
-  const demoEmail = "demo@giftus.in";
+  const demoEmail = "demo@shubhsagan.com";
   let owner = await db.query.users.findFirst({
     where: eq(schema.users.email, demoEmail),
   });
@@ -24,9 +24,9 @@ async function main() {
     const id = nanoid();
     await db.insert(schema.users).values({
       id,
-      name: "Giftus Demo",
+      name: "Shubh Sagan Demo",
       email: demoEmail,
-      passwordHash: await bcrypt.hash("giftus-demo-pass", 10),
+      passwordHash: await bcrypt.hash("shubhsagan-demo-pass", 10),
     });
     owner = await db.query.users.findFirst({
       where: eq(schema.users.id, id),

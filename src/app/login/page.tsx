@@ -43,7 +43,7 @@ export default function LoginPage() {
         aria-hidden
       />
       <Link href="/" className="animate-soft-in font-display text-2xl text-ink">
-        Giftus
+        Shubh Sagan
       </Link>
       <h1
         className="animate-soft-in mt-8 font-display text-4xl text-ink"

@@ -1047,7 +1047,7 @@ h3,
   text-wrap: balance;
 }
 
-.giftus-shell {
+.shubhsagan-shell {
   background:
     radial-gradient(1100px 520px at 8% -8%, rgba(184, 74, 94, 0.11), transparent 58%),
     radial-gradient(900px 460px at 100% 2%, rgba(201, 150, 58, 0.12), transparent 52%),
@@ -1152,6 +1152,34 @@ h3,
 .hero-veil {
   background:
     linear-gradient(105deg, rgba(28, 20, 16, 0.82) 0%, rgba(42, 31, 28, 0.55) 45%, rgba(28, 20, 16, 0.22) 100%);
+}
+
+.home-shell {
+  background:
+    radial-gradient(900px 420px at 0% 18%, rgba(184, 74, 94, 0.05), transparent 55%),
+    var(--paper);
+}
+
+.home-hero-veil {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(28, 20, 16, 0.28) 0%,
+      rgba(28, 20, 16, 0.18) 28%,
+      rgba(28, 20, 16, 0.55) 62%,
+      rgba(28, 20, 16, 0.88) 100%
+    ),
+    linear-gradient(
+      105deg,
+      rgba(42, 31, 28, 0.72) 0%,
+      rgba(42, 31, 28, 0.2) 48%,
+      rgba(28, 20, 16, 0.12) 100%
+    );
+}
+
+.home-feature-frame {
+  border-radius: 1.75rem;
+  box-shadow: 0 24px 60px rgba(28, 20, 16, 0.14);
 }
 
 .float-orb {

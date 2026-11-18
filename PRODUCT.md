@@ -1,6 +1,8 @@
-# Giftus
+# Shubh Sagan
 
 India's premium celebration gift registry — personalized pages for baby showers, weddings, and life's milestones.
+
+**Domain:** shubhsagan.com
 
 ## Audience
 - Registry creators (parents-to-be, couples) who want a beautiful, personal page — not a generic wishlist

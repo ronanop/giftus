@@ -30,7 +30,7 @@ export const DEMO_REGISTRY: Registry = {
   ],
   eventDate: "2026-12-14",
   location: "Bengaluru",
-  upiId: "giftus@upi",
+  upiId: "shubhsagan@upi",
   upiName: "Aanya's Parents",
   isPublic: true,
   categories: [

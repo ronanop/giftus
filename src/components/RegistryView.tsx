@@ -231,7 +231,7 @@ export function RegistryView({ initial }: { initial: Registry }) {
           <header className="registry-topnav">
             <div className="registry-topnav-inner">
               <Link href="/" className="registry-topnav-brand">
-                Giftus
+                Shubh Sagan
               </Link>
               <nav className="registry-topnav-links" aria-label="Registry">
                 <a href="#registry-story" className="registry-topnav-link">
@@ -350,7 +350,7 @@ export function RegistryView({ initial }: { initial: Registry }) {
               href="/"
               className="absolute left-[max(1.25rem,env(safe-area-inset-left))] top-[max(1.25rem,env(safe-area-inset-top))] font-display text-xl text-white/90 transition hover:text-white md:left-8 md:top-6"
             >
-              Giftus
+              Shubh Sagan
             </Link>
             <span className="animate-soft-in inline-flex w-fit rounded-full bg-gradient-to-r from-gold to-marigold px-3.5 py-1 text-sm font-medium text-ink shadow-[0_8px_24px_rgba(168,137,74,0.35)]">
               {occasionLabel(registry.occasion)}

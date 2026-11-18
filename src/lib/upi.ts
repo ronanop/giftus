@@ -6,7 +6,7 @@ export function buildUpiUri(input: {
 }) {
   const params = new URLSearchParams();
   params.set("pa", input.pa.trim());
-  params.set("pn", (input.pn || "Giftus").slice(0, 80));
+  params.set("pn", (input.pn || "Shubh Sagan").slice(0, 80));
   params.set("cu", "INR");
   if (input.am && input.am > 0) params.set("am", input.am.toFixed(2));
   if (input.tn) params.set("tn", input.tn.slice(0, 80));

@@ -21,7 +21,7 @@ async function main() {
     searchJson.registries?.[0]?.slug,
   );
 
-  const email = `neon-tester-${Date.now()}@giftus.in`;
+  const email = `neon-tester-${Date.now()}@shubhsagan.com`;
   const signup = await fetch(`${base}/api/auth/signup`, {
     method: "POST",
     headers: { "content-type": "application/json" },

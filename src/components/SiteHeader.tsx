@@ -11,17 +11,23 @@ export async function SiteHeader() {
           href="/"
           className="font-display text-2xl tracking-tight text-ink transition hover:text-rose"
         >
-          Giftus
+          Shubh Sagan
         </Link>
         <nav className="hidden items-center gap-7 text-sm text-ink/75 md:flex">
           <Link href="/#how" className="transition hover:text-ink">
             How it works
           </Link>
-          <Link href="/r/aanya-baby-shower" className="transition hover:text-ink">
+          <Link
+            href="/r/shraddhas-baby-arrival"
+            className="transition hover:text-ink"
+          >
             See a registry
           </Link>
           <Link href="/search" className="transition hover:text-ink">
             Find
+          </Link>
+          <Link href="/blog" className="transition hover:text-ink">
+            Guides
           </Link>
         </nav>
         <div className="flex items-center gap-2">

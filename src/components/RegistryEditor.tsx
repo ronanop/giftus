@@ -455,7 +455,9 @@ export function RegistryEditor({ initial }: { initial: Registry }) {
       </div>
 
       <h1 className="mt-6 font-display text-4xl text-ink">{registry.title}</h1>
-      <p className="mt-1 text-sm text-ink/55">giftus.in/r/{registry.slug}</p>
+      <p className="mt-1 text-sm text-ink/55">
+        shubhsagan.com/r/{registry.slug}
+      </p>
       {babyArrival ? (
         <p className="mt-2 text-sm text-grove">
           Baby Arrival template — edit names, dates, cover, story, and gifts

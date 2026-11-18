@@ -1,6 +1,8 @@
-# Giftus
+# Shubh Sagan
 
 Premium personalized gift registries for India — baby showers, weddings, and celebrations.
+
+**Domain:** [shubhsagan.com](https://shubhsagan.com)
 
 ## Stack
 - **Next.js** (App Router) → deploy on **Vercel**

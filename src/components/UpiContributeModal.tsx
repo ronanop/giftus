@@ -35,7 +35,7 @@ export function UpiContributeModal({
       pa: registry.upiId,
       pn: registry.upiName || registry.title,
       am: amount,
-      tn: `${fund.title} via Giftus`,
+      tn: `${fund.title} via Shubh Sagan`,
     });
   }, [amount, fund, registry]);
 

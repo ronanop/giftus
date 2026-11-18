@@ -24,9 +24,14 @@ export default function SearchPage() {
   return (
     <div className="mx-auto max-w-3xl px-5 py-12 md:px-8">
       <Link href="/" className="font-display text-2xl text-ink">
-        Giftus
+        Shubh Sagan
       </Link>
-      <h1 className="mt-8 font-display text-4xl text-ink">Find a registry</h1>
+      <h1 className="mt-8 font-display text-4xl text-ink">
+        Find a gift registry
+      </h1>
+      <p className="mt-2 text-ink/65">
+        Search baby shower, wedding, and celebration registries by name or city.
+      </p>
       <input
         value={q}
         onChange={(e) => setQ(e.target.value)}

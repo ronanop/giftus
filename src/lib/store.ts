@@ -254,6 +254,24 @@ export async function searchPublicRegistries(query: string) {
   return rows.map(rowToRegistry);
 }
 
+/** Lightweight public registry list for sitemap / SEO. */
+export async function listPublicRegistriesForSitemap(limit = 500) {
+  const db = await getDb();
+  const rows = await db
+    .select({
+      slug: registries.slug,
+      updatedAt: registries.updatedAt,
+    })
+    .from(registries)
+    .where(eq(registries.isPublic, true))
+    .orderBy(desc(registries.updatedAt))
+    .limit(limit);
+  return rows.map((row) => ({
+    slug: row.slug,
+    updatedAt: row.updatedAt ? new Date(row.updatedAt) : new Date(),
+  }));
+}
+
 async function uniqueSlug(base: string) {
   let slug = slugify(base) || "registry";
   let i = 0;
