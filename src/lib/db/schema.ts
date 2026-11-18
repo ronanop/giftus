@@ -11,6 +11,7 @@ import {
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
+import type { BabyArrivalTheme } from "@/lib/types";
 
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
@@ -39,7 +40,7 @@ export const registries = pgTable("registries", {
   categories: jsonb("categories").$type<unknown[]>().default([]),
   items: jsonb("items").$type<unknown[]>().default([]),
   funds: jsonb("funds").$type<unknown[]>().default([]),
-  theme: jsonb("theme").$type<Record<string, unknown>>().default({}),
+  theme: jsonb("theme").$type<BabyArrivalTheme>().default({}),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
