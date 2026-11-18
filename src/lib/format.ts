@@ -9,7 +9,7 @@ export function formatINR(amount?: number | null) {
 
 export function occasionLabel(occasion: string) {
   const map: Record<string, string> = {
-    baby_shower: "Baby Shower",
+    baby_shower: "Baby Arrival",
     wedding: "Wedding",
     housewarming: "Housewarming",
     anniversary: "Anniversary",

@@ -86,8 +86,14 @@ export function UpiContributeModal({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/45 p-4 sm:items-center">
       <button className="absolute inset-0 cursor-default" aria-label="Close" onClick={onClose} />
       <div className="relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-3xl bg-paper p-6 shadow-[0_30px_80px_rgba(28,20,16,0.3)]">
-        <h2 className="font-display text-2xl text-ink">{fund.title}</h2>
-        <p className="mt-1 text-sm text-ink/65">{fund.description}</p>
+        <h2 className="font-display text-2xl text-ink">
+          {/fund/i.test(fund.title) ? "Send a cash gift" : fund.title}
+        </h2>
+        <p className="mt-1 text-sm text-ink/65">
+          {fund.description && !/upi/i.test(fund.description)
+            ? fund.description
+            : "Choose an amount and pay directly via UPI."}
+        </p>
 
         {step === "pay" ? (
           <div className="mt-5 space-y-4">

@@ -221,85 +221,151 @@ export function RegistryView({ initial }: { initial: Registry }) {
 
   return (
     <div className={`min-h-full ${whimsy ? "whimsy-shell" : ""}`}>
-      <div className="relative isolate overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={registry.coverImageUrl}
-          alt=""
-          className="ken-burns absolute inset-0 h-full w-full object-cover"
-        />
-        <div
-          className={`absolute inset-0 ${
-            whimsy
-              ? "bg-[linear-gradient(180deg,rgba(47,62,47,0.28)_0%,rgba(47,62,47,0.2)_38%,rgba(47,62,47,0.72)_72%,rgba(31,42,31,0.94)_100%)]"
-              : "bg-gradient-to-t from-dusk via-ink/55 to-ink/20"
-          }`}
-        />
-        <div
-          className="float-orb left-[10%] top-[30%] hidden h-44 w-44 bg-rose/35 sm:block"
-          style={{ animationDelay: "0.4s" }}
-        />
-        <div
-          className="float-orb right-[5%] top-[18%] hidden h-52 w-52 bg-marigold/25 sm:block"
-          style={{ animationDelay: "1.6s" }}
-        />
-        <div className="pointer-events-none absolute inset-0 hidden sm:block">
-          <HeartField dense />
+      {whimsy ? (
+        <div className="relative isolate overflow-hidden bg-[#2f3e2f]">
+          <header className="registry-topnav">
+            <div className="registry-topnav-inner">
+              <Link href="/" className="registry-topnav-brand">
+                Giftus
+              </Link>
+              <nav className="registry-topnav-links" aria-label="Registry">
+                <a href="#registry-story" className="registry-topnav-link">
+                  Our Story
+                </a>
+                <a href="#registry-categories" className="registry-topnav-link">
+                  Registry
+                </a>
+              </nav>
+            </div>
+          </header>
+          <div className="whimsy-cover">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={registry.coverImageUrl}
+              alt=""
+              className="whimsy-cover-img"
+            />
+          </div>
+          <div className="relative mx-auto max-w-5xl px-4 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-5 md:px-8 md:pb-10 md:pt-5">
+            <div className="whimsy-invite animate-soft-in">
+              <svg
+                className="whimsy-invite-flourish"
+                viewBox="0 0 160 28"
+                fill="none"
+                aria-hidden
+              >
+                <path
+                  d="M8 16c18-14 36-14 54 0 10 8 20 8 30 0 18-14 36-14 54 0"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M80 6c-3.2 2.4-5.2 5.4-5.2 8.4 0 0 2.6-1.6 5.2-1.6s5.2 1.6 5.2 1.6c0-3-2-6-5.2-8.4z"
+                  fill="currentColor"
+                />
+                <circle cx="80" cy="16.5" r="2.2" fill="currentColor" />
+              </svg>
+
+              <p className="whimsy-invite-seal">{occasionLabel(registry.occasion)}</p>
+
+              <p
+                className="whimsy-invite-script"
+                style={{ animationDelay: "60ms" }}
+              >
+                Our Little One
+              </p>
+
+              <div className="whimsy-invite-rule" aria-hidden>
+                <span />
+                <svg viewBox="0 0 20 20" fill="none">
+                  <path
+                    d="M10 2.5c1.8 2.4 3.2 4.4 3.2 6.6 0 2.1-1.4 3.8-3.2 3.8S6.8 11.2 6.8 9.1c0-2.2 1.4-4.2 3.2-6.6z"
+                    fill="currentColor"
+                  />
+                  <path
+                    d="M10 12.8v4.2"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <span />
+              </div>
+
+              <h1
+                className="whimsy-invite-title"
+                style={{ animationDelay: "90ms" }}
+              >
+                {registry.title}
+              </h1>
+
+              <p
+                className="whimsy-invite-lede"
+                style={{ animationDelay: "160ms" }}
+              >
+                A gentle wishlist for the newest member of our family —
+                chosen with love, waiting for yours.
+              </p>
+
+              <a
+                href="#registry-categories"
+                className="whimsy-invite-cta btn-glow"
+                style={{ animationDelay: "220ms" }}
+              >
+                Open the Registry
+                <span aria-hidden>→</span>
+              </a>
+            </div>
+          </div>
         </div>
-        <div className="relative mx-auto flex min-h-[100svh] max-w-5xl flex-col justify-end px-5 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-[max(5rem,calc(env(safe-area-inset-top)+4rem))] md:min-h-[74vh] md:px-8 md:pb-12">
-          <Link
-            href="/"
-            className="absolute left-[max(1.25rem,env(safe-area-inset-left))] top-[max(1.25rem,env(safe-area-inset-top))] font-display text-xl text-white/90 transition hover:text-white md:left-8 md:top-6"
-          >
-            Giftus
-          </Link>
-          <span
-            className={`animate-soft-in inline-flex w-fit rounded-full px-3.5 py-1 text-sm font-medium shadow-[0_8px_24px_rgba(168,137,74,0.35)] ${
-              whimsy
-                ? "bg-parchment text-grove"
-                : "bg-gradient-to-r from-gold to-marigold text-ink"
-            }`}
-          >
-            {occasionLabel(registry.occasion)}
-          </span>
-          {whimsy ? (
+      ) : (
+        <div className="relative isolate overflow-hidden bg-dusk">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={registry.coverImageUrl}
+            alt=""
+            className="ken-burns absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-dusk via-ink/55 to-ink/20" />
+          <div
+            className="float-orb left-[10%] top-[30%] hidden h-44 w-44 bg-rose/35 sm:block"
+            style={{ animationDelay: "0.4s" }}
+          />
+          <div
+            className="float-orb right-[5%] top-[18%] hidden h-52 w-52 bg-marigold/25 sm:block"
+            style={{ animationDelay: "1.6s" }}
+          />
+          <div className="pointer-events-none absolute inset-0 hidden sm:block">
+            <HeartField dense />
+          </div>
+          <div className="relative mx-auto flex min-h-[100svh] max-w-5xl flex-col justify-end px-5 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-[max(5rem,calc(env(safe-area-inset-top)+4rem))] md:min-h-[74vh] md:px-8 md:pb-12">
+            <Link
+              href="/"
+              className="absolute left-[max(1.25rem,env(safe-area-inset-left))] top-[max(1.25rem,env(safe-area-inset-top))] font-display text-xl text-white/90 transition hover:text-white md:left-8 md:top-6"
+            >
+              Giftus
+            </Link>
+            <span className="animate-soft-in inline-flex w-fit rounded-full bg-gradient-to-r from-gold to-marigold px-3.5 py-1 text-sm font-medium text-ink shadow-[0_8px_24px_rgba(168,137,74,0.35)]">
+              {occasionLabel(registry.occasion)}
+            </span>
+            <h1
+              className="animate-soft-in mt-2 font-display text-[2.15rem] leading-[1.08] text-white [text-shadow:0_2px_24px_rgba(0,0,0,0.35)] sm:mt-3 sm:text-4xl md:text-6xl"
+              style={{ animationDelay: "90ms" }}
+            >
+              {registry.title}
+            </h1>
             <p
-              className="animate-soft-in mt-3 font-script text-[1.7rem] leading-tight text-parchment sm:mt-5 sm:text-4xl md:text-6xl"
-              style={{ animationDelay: "60ms" }}
+              className="animate-soft-in mt-2.5 max-w-2xl text-[0.95rem] leading-relaxed text-white/88 sm:mt-3 sm:text-base"
+              style={{ animationDelay: "160ms" }}
             >
-              A Little One Is Almost Home
+              {[registry.location, registry.eventDate]
+                .filter(Boolean)
+                .join(" · ")}
             </p>
-          ) : null}
-          <h1
-            className={`animate-soft-in mt-2 font-display text-[2.15rem] leading-[1.08] text-white [text-shadow:0_2px_24px_rgba(0,0,0,0.35)] sm:mt-3 sm:text-4xl md:text-6xl ${
-              whimsy ? "md:text-5xl" : ""
-            }`}
-            style={{ animationDelay: "90ms" }}
-          >
-            {registry.title}
-          </h1>
-          <p
-            className="animate-soft-in mt-2.5 max-w-2xl text-[0.95rem] leading-relaxed text-white/88 sm:mt-3 sm:text-base"
-            style={{ animationDelay: "160ms" }}
-          >
-            {whimsy
-              ? "Our registry for the newest member of our family."
-              : [registry.location, registry.eventDate]
-                  .filter(Boolean)
-                  .join(" · ")}
-          </p>
-          {whimsy ? (
-            <a
-              href="#registry-categories"
-              className="animate-soft-in mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-grove px-5 py-3.5 text-sm font-semibold text-parchment shadow-[0_12px_28px_rgba(47,62,47,0.35)] transition hover:bg-grove-deep sm:mt-7 sm:w-fit sm:justify-start"
-              style={{ animationDelay: "220ms" }}
-            >
-              Explore the Registry
-              <span aria-hidden>→</span>
-            </a>
-          ) : null}
+          </div>
         </div>
-      </div>
+      )}
 
       {whimsy && (registry.categories || []).length > 0 ? (
         <div id="registry-categories">
@@ -315,12 +381,18 @@ export function RegistryView({ initial }: { initial: Registry }) {
       <div className="mx-auto max-w-5xl px-5 py-8 sm:py-10 md:px-8">
         <Reveal>
           <div
-            className={
+            id="registry-story"
+            className={`scroll-mt-24 ${
               whimsy
                 ? "whimsy-hero-frame rounded-[1.35rem] p-5 sm:rounded-[1.75rem] sm:p-6 md:p-8"
                 : ""
-            }
+            }`}
           >
+            {whimsy ? (
+              <p className="mb-3 font-script text-2xl text-grove sm:text-3xl">
+                Our Story
+              </p>
+            ) : null}
             <p className="max-w-3xl text-base leading-relaxed text-ink/80 sm:text-lg">
               {registry.story}
             </p>
@@ -492,53 +564,88 @@ export function RegistryView({ initial }: { initial: Registry }) {
         </section>
 
         {registry.funds.length > 0 ? (
-          <section className="mt-16">
+          <section className="mt-16" id="cash-gift">
             <Reveal>
-              <h2 className="font-display text-3xl text-ink">Cash funds</h2>
+              <div className="text-center sm:text-left">
+                <h2
+                  className={`font-display text-3xl ${
+                    whimsy ? "text-grove-deep" : "text-ink"
+                  }`}
+                >
+                  Cash gift
+                </h2>
+                <p
+                  className={`mt-1 text-sm ${
+                    whimsy ? "text-grove/70" : "text-ink/60"
+                  }`}
+                >
+                  Prefer to gift money? Send any amount straight via UPI.
+                </p>
+              </div>
             </Reveal>
             <div className="mt-6 grid gap-5 md:grid-cols-2">
               {registry.funds.map((f, i) => {
-                const pct = Math.min(
-                  100,
-                  Math.round((f.raisedAmount / f.goalAmount) * 100),
-                );
+                const gifted = f.raisedAmount > 0;
                 return (
                   <Reveal key={f.id} delay={i * 100}>
                     <article
-                      className={`gift-card rounded-[1.75rem] bg-gradient-to-br from-white to-sage-soft/40 p-6 shadow-[0_12px_40px_rgba(28,20,16,0.06)] ${
+                      className={`cash-gift-card ${whimsy ? "is-whimsy" : ""} ${
                         flashId === f.id ? "claim-highlight" : ""
                       }`}
                     >
-                      <h3 className="font-display text-2xl text-ink">
-                        {f.title}
-                      </h3>
-                      {f.description ? (
-                        <p className="mt-2 text-sm text-ink/65">
-                          {f.description}
-                        </p>
-                      ) : null}
-                      <div className="mt-5 h-2.5 overflow-hidden rounded-full bg-mist">
-                        <div
-                          className="progress-fill h-full rounded-full bg-gradient-to-r from-gold to-marigold"
-                          style={{ width: `${pct}%` }}
-                        />
+                      <div className="cash-gift-ornament" aria-hidden>
+                        <svg viewBox="0 0 48 48" fill="none">
+                          <rect
+                            x="10"
+                            y="14"
+                            width="28"
+                            height="22"
+                            rx="4"
+                            stroke="currentColor"
+                            strokeWidth="1.7"
+                          />
+                          <path
+                            d="M10 20h28M24 14v22"
+                            stroke="currentColor"
+                            strokeWidth="1.7"
+                            strokeLinecap="round"
+                          />
+                          <path
+                            d="M18 10c2.2 1.6 4.2 1.6 6 0 1.8 1.6 3.8 1.6 6 0"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                          />
+                        </svg>
                       </div>
-                      <p className="mt-2 text-sm text-ink/70">
-                        Raised {formatINR(f.raisedAmount)} of{" "}
-                        {formatINR(f.goalAmount)}
+                      <h3 className="cash-gift-title">
+                        {/fund/i.test(f.title) ? "A little something special" : f.title}
+                      </h3>
+                      <p className="cash-gift-copy">
+                        {f.description && !/upi/i.test(f.description)
+                          ? f.description
+                          : "Send a cash gift of any amount — it goes directly to the family via UPI."}
                       </p>
-                      {f.contributors[0] ? (
-                        <p className="mt-3 text-sm text-sage">
-                          Latest: {f.contributors[0].name} ·{" "}
-                          {formatINR(f.contributors[0].amount)}
+                      {gifted ? (
+                        <p className="cash-gift-meta">
+                          Loved ones have gifted {formatINR(f.raisedAmount)}
+                          {f.contributors[0]
+                            ? ` · latest from ${f.contributors[0].name}`
+                            : ""}
                         </p>
-                      ) : null}
+                      ) : (
+                        <p className="cash-gift-meta">
+                          Be the first to send a cash gift
+                        </p>
+                      )}
                       <button
                         type="button"
                         onClick={() => setFund(f)}
-                        className="btn-glow mt-5 w-full rounded-full bg-ink px-4 py-3 text-sm font-semibold text-paper hover:bg-dusk"
+                        className={`btn-glow cash-gift-cta ${
+                          whimsy ? "is-whimsy" : ""
+                        }`}
                       >
-                        Contribute via UPI
+                        Send a cash gift
                       </button>
                     </article>
                   </Reveal>

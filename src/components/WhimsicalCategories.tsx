@@ -89,6 +89,15 @@ export function WhimsicalCategories({
             );
           })}
         </div>
+
+        <p className="whimsy-scroll-hint sm:hidden" aria-hidden>
+          <span className="font-script text-[1.15rem] text-grove/75">
+            Scroll for more categories
+          </span>
+          <span className="whimsy-scroll-hint-arrow" aria-hidden>
+            →
+          </span>
+        </p>
       </div>
     </section>
   );
