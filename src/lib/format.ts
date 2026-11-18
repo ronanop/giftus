@@ -1,9 +1,11 @@
 export function formatINR(amount?: number | null) {
   if (amount == null || Number.isNaN(amount)) return "";
+  const hasPaise = Math.round(amount * 100) % 100 !== 0;
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: hasPaise ? 2 : 0,
+    maximumFractionDigits: 2,
   }).format(amount);
 }
 

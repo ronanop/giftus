@@ -42,14 +42,71 @@ function absoluteUrl(base: string, maybe?: string | null) {
   }
 }
 
-function parsePrice(...candidates: Array<string | undefined | null>) {
+/** Keep rupees + paise (2 dp) without floating noise. */
+function normalizeRupees(num: number) {
+  return Math.round(num * 100) / 100;
+}
+
+/**
+ * Parse INR price strings without turning "₹89,998.00" into 8999800
+ * (decimal stripped) or "Rs. 8999" into 0.8999 (dot from "Rs.").
+ */
+export function parsePrice(
+  ...candidates: Array<string | number | undefined | null>
+) {
   for (const raw of candidates) {
-    if (!raw) continue;
-    const cleaned = raw.replace(/[^\d.]/g, "");
-    const num = Number.parseFloat(cleaned);
-    if (!Number.isNaN(num) && num > 0) return Math.round(num);
+    if (raw == null || raw === "") continue;
+    if (typeof raw === "number") {
+      if (Number.isFinite(raw) && raw > 0) return normalizeRupees(raw);
+      continue;
+    }
+
+    const text = String(raw)
+      .replace(/\u00a0/g, " ")
+      .replace(/(?:rs\.?|inr|mrp|₹)/gi, " ")
+      .trim();
+    if (!text) continue;
+
+    const tokens = text.match(/\d[\d,]*(?:\.\d+)?/g) || [];
+    for (const token of tokens) {
+      let whole: string;
+      let frac = "";
+      const lastDot = token.lastIndexOf(".");
+      if (lastDot >= 0) {
+        const maybeFrac = token.slice(lastDot + 1);
+        if (/^\d{1,2}$/.test(maybeFrac)) {
+          whole = token.slice(0, lastDot).replace(/,/g, "");
+          frac = maybeFrac;
+        } else {
+          // Dots used as thousand separators — drop separators.
+          whole = token.replace(/[.,]/g, "");
+        }
+      } else {
+        whole = token.replace(/,/g, "");
+      }
+      if (!whole) continue;
+      const num = frac
+        ? Number.parseFloat(`${whole}.${frac.padEnd(2, "0")}`)
+        : Number.parseFloat(whole);
+      if (!Number.isNaN(num) && num > 0) return normalizeRupees(num);
+    }
   }
   return undefined;
+}
+
+function amazonPriceFromParts(
+  whole?: string | null,
+  fraction?: string | null,
+) {
+  if (!whole?.trim()) return undefined;
+  const wholeDigits = whole.replace(/[^\d]/g, "");
+  if (!wholeDigits) return undefined;
+  const fracDigits = (fraction || "00").replace(/[^\d]/g, "").slice(0, 2);
+  return parsePrice(
+    fracDigits
+      ? `${wholeDigits}.${fracDigits.padEnd(2, "0")}`
+      : wholeDigits,
+  );
 }
 
 function extractFirstCryProductId(url: string) {
@@ -311,8 +368,18 @@ function parseProductHtml(html: string, baseUrl: string, storeName: string) {
       ? extractFirstCryPrice(html, baseUrl)
       : undefined;
 
+  const amazonComposite = amazonPriceFromParts(
+    $(".priceToPay .a-price-whole").first().text() ||
+      $("#corePrice_feature_div .a-price-whole").first().text() ||
+      $(".a-price .a-price-whole").first().text(),
+    $(".priceToPay .a-price-fraction").first().text() ||
+      $("#corePrice_feature_div .a-price-fraction").first().text() ||
+      $(".a-price .a-price-fraction").first().text(),
+  );
+
   const price = parsePrice(
-    firstCryPrice != null ? String(firstCryPrice) : undefined,
+    firstCryPrice != null ? firstCryPrice : undefined,
+    amazonComposite,
     jsonLd.price,
     $('meta[property="product:price:amount"]').attr("content"),
     $('meta[itemprop="price"]').attr("content"),
@@ -325,7 +392,6 @@ function parseProductHtml(html: string, baseUrl: string, storeName: string) {
     // Flipkart / generic
     $("div._30jeq3").first().text(),
     $('[class*="selling-price"]').first().text(),
-    $('[class*="price"]').first().text(),
   );
 
   let title = cleanTitle(jsonLd.name || ogTitle);
