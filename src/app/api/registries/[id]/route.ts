@@ -25,6 +25,7 @@ const imageUrlSchema = z
 
 const patchSchema = z.object({
   title: z.string().min(2).optional(),
+  slug: z.string().min(1).max(80).optional(),
   story: z.string().optional(),
   coverImageUrl: imageUrlSchema.optional(),
   photos: z
@@ -41,6 +42,7 @@ const patchSchema = z.object({
   upiId: z.string().optional(),
   upiName: z.string().optional(),
   isPublic: z.boolean().optional(),
+  cashGiftsEnabled: z.boolean().optional(),
   occasion: z
     .enum([
       "baby_shower",

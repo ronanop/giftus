@@ -571,7 +571,7 @@ export function RegistryView({ initial }: { initial: Registry }) {
           </div>
         </section>
 
-        {registry.funds.length > 0 ? (
+        {registry.cashGiftsEnabled && registry.funds.length > 0 ? (
           <section className="mt-16" id="cash-gift">
             <Reveal>
               <div className="text-center sm:text-left">

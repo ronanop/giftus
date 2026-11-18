@@ -27,6 +27,8 @@ import {
   isBabyArrivalOccasion,
 } from "./baby-arrival-template";
 
+type ThemeRow = BabyArrivalTheme & { cashGiftsEnabled?: boolean };
+
 function rowToRegistry(row: typeof registries.$inferSelect): Registry {
   const items = (((row.items as GiftItem[] | null) ?? []) as GiftItem[]).map(
     (item) => ({
@@ -61,9 +63,11 @@ function rowToRegistry(row: typeof registries.$inferSelect): Registry {
     items,
     funds: ((row.funds as CashFund[] | null) ?? []) as CashFund[],
     theme:
-      ((row as { theme?: BabyArrivalTheme | null }).theme as
-        | BabyArrivalTheme
-        | null) ?? undefined,
+      ((row as { theme?: ThemeRow | null }).theme as ThemeRow | null) ??
+      undefined,
+    cashGiftsEnabled:
+      ((row as { theme?: ThemeRow | null }).theme?.cashGiftsEnabled ??
+        true) !== false,
     createdAt: row.createdAt?.toISOString() ?? new Date().toISOString(),
     updatedAt: row.updatedAt?.toISOString() ?? new Date().toISOString(),
   };
@@ -282,12 +286,27 @@ export async function listPublicRegistriesForSitemap(limit = 500) {
   }));
 }
 
-async function uniqueSlug(base: string) {
+async function uniqueSlug(base: string, exceptId?: string) {
   let slug = slugify(base) || "registry";
   let i = 0;
-  while (await getRegistryBySlug(slug)) {
+  while (true) {
+    const existing = await getRegistryBySlug(slug);
+    if (!existing || (exceptId && existing.id === exceptId)) break;
     i += 1;
     slug = `${slugify(base)}-${i}`;
+  }
+  return slug;
+}
+
+/** Normalize a user-chosen slug and reject collisions with other registries. */
+export async function resolveRegistrySlug(input: string, exceptId?: string) {
+  const slug = slugify(input) || "registry";
+  if (slug.length < 2) {
+    throw new Error("URL slug is too short. Use at least 2 letters or numbers.");
+  }
+  const existing = await getRegistryBySlug(slug);
+  if (existing && existing.id !== exceptId) {
+    throw new Error("That URL is already taken. Try another slug.");
   }
   return slug;
 }
@@ -354,6 +373,7 @@ export async function updateRegistry(
     Pick<
       Registry,
       | "title"
+      | "slug"
       | "story"
       | "coverImageUrl"
       | "photos"
@@ -367,16 +387,45 @@ export async function updateRegistry(
       | "items"
       | "funds"
       | "theme"
+      | "cashGiftsEnabled"
     >
   >,
 ) {
   const existing = await getRegistryById(id);
   if (!existing || existing.ownerId !== ownerId) return null;
+
+  const {
+    cashGiftsEnabled: cashFlag,
+    slug: slugPatch,
+    theme: themePatch,
+    ...rest
+  } = patch;
+
+  const slug =
+    slugPatch !== undefined
+      ? await resolveRegistrySlug(slugPatch, id)
+      : undefined;
+
+  const existingTheme = (existing.theme || {}) as ThemeRow;
+  const shouldTouchTheme = cashFlag !== undefined || themePatch !== undefined;
+  const theme: ThemeRow | undefined = shouldTouchTheme
+    ? {
+        ...existingTheme,
+        ...(themePatch || {}),
+        cashGiftsEnabled:
+          cashFlag !== undefined
+            ? cashFlag
+            : (existingTheme.cashGiftsEnabled ?? true),
+      }
+    : undefined;
+
   const db = await getDb();
   await db
     .update(registries)
     .set({
-      ...patch,
+      ...rest,
+      ...(slug !== undefined ? { slug } : {}),
+      ...(theme !== undefined ? { theme } : {}),
       updatedAt: new Date(),
     })
     .where(and(eq(registries.id, id), eq(registries.ownerId, ownerId)));
@@ -595,6 +644,9 @@ export async function confirmContribution(input: {
 }) {
   const registry = await getRegistryBySlug(input.slug);
   if (!registry) throw new Error("Registry not found");
+  if (!registry.cashGiftsEnabled) {
+    throw new Error("Cash gifts are turned off for this registry.");
+  }
   const funds = [...registry.funds];
   const idx = funds.findIndex((f) => f.id === input.fundId);
   if (idx < 0) throw new Error("Fund not found");

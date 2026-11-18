@@ -81,6 +81,8 @@ export interface Registry {
   upiId?: string;
   upiName?: string;
   isPublic: boolean;
+  /** Accept UPI cash gifts on the public page. Default true. */
+  cashGiftsEnabled: boolean;
   categories: GiftCategory[];
   items: GiftItem[];
   funds: CashFund[];

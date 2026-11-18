@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import type { BabyArrivalTheme, GiftItem, Registry } from "@/lib/types";
-import { formatINR } from "@/lib/format";
+import { formatINR, slugify } from "@/lib/format";
 import { categoryImage, groupItemsByCategory } from "@/lib/categories";
 import { isUsableProductImage } from "@/lib/product-image";
 import {
@@ -17,14 +17,17 @@ export function RegistryEditor({ initial }: { initial: Registry }) {
   const [registry, setRegistry] = useState({
     ...initial,
     categories: initial.categories || [],
+    cashGiftsEnabled: initial.cashGiftsEnabled !== false,
   });
   const babyArrival = isBabyArrivalOccasion(registry.occasion);
   const resolvedTheme = resolveBabyArrivalTheme(registry.theme);
   const [title, setTitle] = useState(initial.title);
+  const [slug, setSlug] = useState(initial.slug);
   const [story, setStory] = useState(initial.story);
   const [location, setLocation] = useState(initial.location || "");
   const [eventDate, setEventDate] = useState(initial.eventDate || "");
   const [upiId, setUpiId] = useState(initial.upiId || "");
+  const slugPreview = slugify(slug) || "registry";
   const [themeDraft, setThemeDraft] = useState<Required<BabyArrivalTheme>>({
     ...resolvedTheme,
   });
@@ -67,21 +70,73 @@ export function RegistryEditor({ initial }: { initial: Registry }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: title.trim(),
+          slug: slugPreview,
           story,
           location: location.trim() || undefined,
           eventDate: eventDate || undefined,
           upiId,
           upiName: title.trim() || registry.title,
+          cashGiftsEnabled: registry.cashGiftsEnabled,
           theme: babyArrival ? themeDraft : undefined,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Save failed");
       setRegistry(data.registry);
+      setSlug(data.registry.slug);
       if (data.registry.theme) {
         setThemeDraft(resolveBabyArrivalTheme(data.registry.theme));
       }
-      flash("Saved page details");
+      flash(
+        data.registry.slug !== registry.slug
+          ? `Saved. New page link: shubhsagan.com/r/${data.registry.slug}`
+          : "Saved page details",
+      );
+    } catch (e) {
+      fail(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function setCashGiftsEnabled(enabled: boolean) {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/registries/${registry.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cashGiftsEnabled: enabled }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not update cash gifts");
+      setRegistry(data.registry);
+      flash(
+        enabled
+          ? "Cash gifts enabled on your page"
+          : "Cash gifts hidden from guests",
+      );
+    } catch (e) {
+      fail(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveUpi() {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/registries/${registry.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          upiId: upiId.trim(),
+          upiName: title.trim() || registry.title,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not save UPI ID");
+      setRegistry(data.registry);
+      flash("UPI ID saved");
     } catch (e) {
       fail(e);
     } finally {
@@ -447,16 +502,19 @@ export function RegistryEditor({ initial }: { initial: Registry }) {
           ← Dashboard
         </Link>
         <Link
-          href={`/r/${registry.slug}`}
+          href={`/dashboard/${registry.id}/preview`}
           className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-paper"
         >
-          View live page
+          Preview page
         </Link>
       </div>
 
       <h1 className="mt-6 font-display text-4xl text-ink">{registry.title}</h1>
       <p className="mt-1 text-sm text-ink/55">
-        shubhsagan.com/r/{registry.slug}
+        shubhsagan.com/r/{slugPreview}
+        {slugPreview !== registry.slug ? (
+          <span className="ml-2 text-ink/40">(unsaved)</span>
+        ) : null}
       </p>
       {babyArrival ? (
         <p className="mt-2 text-sm text-grove">
@@ -490,6 +548,30 @@ export function RegistryEditor({ initial }: { initial: Registry }) {
             placeholder="Shraddha's Baby Arrival"
             className="mt-1 w-full rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
           />
+        </label>
+        <label className="block text-sm">
+          <span className="text-ink/60">Page URL</span>
+          <div className="mt-1 flex overflow-hidden rounded-2xl border border-mist focus-within:border-rose">
+            <span className="flex shrink-0 items-center bg-paper/80 px-3 text-sm text-ink/45">
+              shubhsagan.com/r/
+            </span>
+            <input
+              value={slug}
+              onChange={(e) => setSlug(e.target.value)}
+              onBlur={() => setSlug(slugify(slug) || "registry")}
+              placeholder="kiwis-sibling-arrival"
+              spellCheck={false}
+              autoCapitalize="none"
+              autoCorrect="off"
+              className="min-w-0 flex-1 border-0 bg-transparent px-3 py-3 text-sm outline-none"
+            />
+          </div>
+          <p className="mt-1.5 text-xs text-ink/45">
+            Guests open this link. Letters, numbers, and hyphens only.
+            {slugPreview !== registry.slug
+              ? " Saving will change your public URL."
+              : ""}
+          </p>
         </label>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-sm">
@@ -552,15 +634,6 @@ export function RegistryEditor({ initial }: { initial: Registry }) {
             value={story}
             onChange={(e) => setStory(e.target.value)}
             rows={4}
-            className="mt-1 w-full rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="text-ink/60">UPI ID</span>
-          <input
-            value={upiId}
-            onChange={(e) => setUpiId(e.target.value)}
-            placeholder="yourname@oksbi"
             className="mt-1 w-full rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
           />
         </label>
@@ -842,48 +915,110 @@ export function RegistryEditor({ initial }: { initial: Registry }) {
       </section>
 
       <section className="mt-6 space-y-4 rounded-[1.75rem] bg-white p-6 shadow-[0_10px_30px_rgba(28,20,16,0.05)]">
-        <div>
-          <h2 className="font-display text-2xl">
-            {babyArrival ? "Cash gift" : "Cash fund"}
-          </h2>
-          {babyArrival ? (
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="font-display text-2xl">
+              {babyArrival ? "Cash gift" : "Cash fund"}
+            </h2>
             <p className="mt-1 text-sm text-ink/60">
-              Guests can send money via UPI. Rename the gift title guests see.
+              {registry.cashGiftsEnabled
+                ? "Guests can send money via UPI on your public page."
+                : "Turn this on if you want guests to send UPI cash gifts."}
             </p>
-          ) : null}
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={registry.cashGiftsEnabled}
+            disabled={busy}
+            onClick={() => void setCashGiftsEnabled(!registry.cashGiftsEnabled)}
+            className={`relative inline-flex h-8 w-14 shrink-0 items-center rounded-full transition ${
+              registry.cashGiftsEnabled ? "bg-rose" : "bg-mist"
+            } disabled:opacity-50`}
+          >
+            <span className="sr-only">
+              {registry.cashGiftsEnabled
+                ? "Disable cash gifts"
+                : "Enable cash gifts"}
+            </span>
+            <span
+              className={`inline-block h-6 w-6 rounded-full bg-white shadow transition ${
+                registry.cashGiftsEnabled ? "translate-x-7" : "translate-x-1"
+              }`}
+            />
+          </button>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <input
-            value={fundTitle}
-            onChange={(e) => setFundTitle(e.target.value)}
-            placeholder={
-              babyArrival ? "A little something special" : "Nursery fund"
-            }
-            className="rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
-          />
-          <input
-            type="number"
-            value={fundGoal}
-            onChange={(e) => setFundGoal(Number(e.target.value))}
-            className="rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
-          />
-        </div>
-        <button
-          type="button"
-          disabled={busy || !fundTitle}
-          onClick={() => void addFund()}
-          className="rounded-full bg-ink px-5 py-3 text-sm font-semibold text-paper disabled:opacity-50"
-        >
-          {babyArrival ? "Add cash gift" : "Add fund"}
-        </button>
-        <ul className="space-y-2 text-sm text-ink/70">
-          {registry.funds.map((f) => (
-            <li key={f.id}>
-              {f.title}
-              {f.goalAmount ? ` — soft goal ${formatINR(f.goalAmount)}` : ""}
-            </li>
-          ))}
-        </ul>
+
+        {registry.cashGiftsEnabled ? (
+          <>
+            <label className="block text-sm">
+              <span className="text-ink/60">UPI ID</span>
+              <div className="mt-1 flex flex-col gap-2 sm:flex-row">
+                <input
+                  value={upiId}
+                  onChange={(e) => setUpiId(e.target.value)}
+                  placeholder="yourname@oksbi"
+                  className="min-w-0 flex-1 rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
+                />
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void saveUpi()}
+                  className="rounded-full border border-mist px-5 py-3 text-sm font-semibold text-ink hover:bg-paper disabled:opacity-50"
+                >
+                  Save UPI
+                </button>
+              </div>
+              <p className="mt-1.5 text-xs text-ink/45">
+                Guests pay this UPI ID directly when they send a cash gift.
+              </p>
+            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <input
+                value={fundTitle}
+                onChange={(e) => setFundTitle(e.target.value)}
+                placeholder={
+                  babyArrival ? "A little something special" : "Nursery fund"
+                }
+                className="rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
+              />
+              <input
+                type="number"
+                value={fundGoal}
+                onChange={(e) => setFundGoal(Number(e.target.value))}
+                className="rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
+              />
+            </div>
+            <button
+              type="button"
+              disabled={busy || !fundTitle}
+              onClick={() => void addFund()}
+              className="rounded-full bg-ink px-5 py-3 text-sm font-semibold text-paper disabled:opacity-50"
+            >
+              {babyArrival ? "Add cash gift" : "Add fund"}
+            </button>
+            <ul className="space-y-2 text-sm text-ink/70">
+              {registry.funds.map((f) => (
+                <li key={f.id}>
+                  {f.title}
+                  {f.goalAmount
+                    ? ` — soft goal ${formatINR(f.goalAmount)}`
+                    : ""}
+                </li>
+              ))}
+            </ul>
+            {registry.funds.length === 0 ? (
+              <p className="text-sm text-ink/55">
+                No cash gifts yet. Add one above for guests to see.
+              </p>
+            ) : null}
+          </>
+        ) : (
+          <p className="rounded-2xl bg-paper/80 px-4 py-3 text-sm text-ink/55">
+            Cash gifts are off. Your existing cash gift options stay saved, but
+            guests will not see them until you enable this again.
+          </p>
+        )}
       </section>
     </div>
   );

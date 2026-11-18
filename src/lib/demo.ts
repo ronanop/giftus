@@ -33,6 +33,7 @@ export const DEMO_REGISTRY: Registry = {
   upiId: "shubhsagan@upi",
   upiName: "Aanya's Parents",
   isPublic: true,
+  cashGiftsEnabled: true,
   categories: [
     { id: "c1", name: "Everyday essentials", sortOrder: 0 },
     { id: "c2", name: "Nursery gear", sortOrder: 1 },
