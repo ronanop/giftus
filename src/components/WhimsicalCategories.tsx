@@ -34,11 +34,15 @@ export function WhimsicalCategories({
   items,
   activeId,
   onSelect,
+  heading = "Gifts Before the Baby Arrives",
+  subheading = "Explore our wishlist by category",
 }: {
   categories: GiftCategory[];
   items: GiftItem[];
   activeId?: string | null;
   onSelect: (categoryId: string) => void;
+  heading?: string;
+  subheading?: string;
 }) {
   if (!categories.length) return null;
 
@@ -48,15 +52,15 @@ export function WhimsicalCategories({
         <Reveal>
           <div className="px-5 sm:px-0">
             <h2 className="mx-auto max-w-[16ch] font-script text-[1.85rem] leading-[1.15] text-grove sm:max-w-none sm:text-4xl md:text-5xl">
-              Gifts Before the Baby Arrives
+              {heading}
             </h2>
             <p className="mt-2 font-display text-[0.7rem] tracking-[0.16em] text-grove/70 uppercase sm:mt-3 sm:text-sm sm:tracking-[0.18em]">
-              Explore our wishlist by category
+              {subheading}
             </p>
           </div>
         </Reveal>
 
-        <div className="whimsy-category-rail mt-6 sm:mt-10 sm:grid sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-7 xl:gap-3">
+        <div className="whimsy-category-rail mt-6 sm:mt-10">
           {categories.map((category, i) => {
             const art =
               whimsyArtForCategory(category.name) ||

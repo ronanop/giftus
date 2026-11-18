@@ -9,6 +9,10 @@ import {
   isUsableProductImage,
   repairGiftImageUrl,
 } from "@/lib/product-image";
+import {
+  isBabyArrivalOccasion,
+  resolveBabyArrivalTheme,
+} from "@/lib/baby-arrival-template";
 import { HeartField } from "./HeartField";
 import { GiftClaimModal } from "./GiftClaimModal";
 import { UpiContributeModal } from "./UpiContributeModal";
@@ -23,7 +27,8 @@ export function RegistryView({ initial }: { initial: Registry }) {
   const [fund, setFund] = useState<CashFund | null>(null);
   const [flashId, setFlashId] = useState<string | null>(null);
 
-  const whimsy = registry.occasion === "baby_shower";
+  const whimsy = isBabyArrivalOccasion(registry.occasion);
+  const theme = resolveBabyArrivalTheme(registry.theme);
 
   const filteredItems = useMemo(() => {
     let list = registry.items;
@@ -245,77 +250,78 @@ export function RegistryView({ initial }: { initial: Registry }) {
               alt=""
               className="whimsy-cover-img"
             />
-          </div>
-          <div className="relative mx-auto max-w-5xl px-4 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-5 md:px-8 md:pb-10 md:pt-5">
-            <div className="whimsy-invite animate-soft-in">
-              <svg
-                className="whimsy-invite-flourish"
-                viewBox="0 0 160 28"
-                fill="none"
-                aria-hidden
-              >
-                <path
-                  d="M8 16c18-14 36-14 54 0 10 8 20 8 30 0 18-14 36-14 54 0"
-                  stroke="currentColor"
-                  strokeWidth="1.4"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M80 6c-3.2 2.4-5.2 5.4-5.2 8.4 0 0 2.6-1.6 5.2-1.6s5.2 1.6 5.2 1.6c0-3-2-6-5.2-8.4z"
-                  fill="currentColor"
-                />
-                <circle cx="80" cy="16.5" r="2.2" fill="currentColor" />
-              </svg>
-
-              <p className="whimsy-invite-seal">{occasionLabel(registry.occasion)}</p>
-
-              <p
-                className="whimsy-invite-script"
-                style={{ animationDelay: "60ms" }}
-              >
-                Our Little One
-              </p>
-
-              <div className="whimsy-invite-rule" aria-hidden>
-                <span />
-                <svg viewBox="0 0 20 20" fill="none">
+            <div className="whimsy-invite-slot">
+              <div className="whimsy-invite animate-soft-in">
+                <svg
+                  className="whimsy-invite-flourish"
+                  viewBox="0 0 160 28"
+                  fill="none"
+                  aria-hidden
+                >
                   <path
-                    d="M10 2.5c1.8 2.4 3.2 4.4 3.2 6.6 0 2.1-1.4 3.8-3.2 3.8S6.8 11.2 6.8 9.1c0-2.2 1.4-4.2 3.2-6.6z"
-                    fill="currentColor"
-                  />
-                  <path
-                    d="M10 12.8v4.2"
+                    d="M8 16c18-14 36-14 54 0 10 8 20 8 30 0 18-14 36-14 54 0"
                     stroke="currentColor"
                     strokeWidth="1.4"
                     strokeLinecap="round"
                   />
+                  <path
+                    d="M80 6c-3.2 2.4-5.2 5.4-5.2 8.4 0 0 2.6-1.6 5.2-1.6s5.2 1.6 5.2 1.6c0-3-2-6-5.2-8.4z"
+                    fill="currentColor"
+                  />
+                  <circle cx="80" cy="16.5" r="2.2" fill="currentColor" />
                 </svg>
-                <span />
+
+                <p className="whimsy-invite-seal">
+                  {occasionLabel(registry.occasion)}
+                </p>
+
+                <p
+                  className="whimsy-invite-script"
+                  style={{ animationDelay: "60ms" }}
+                >
+                  {theme.scriptLine}
+                </p>
+
+                <div className="whimsy-invite-rule" aria-hidden>
+                  <span />
+                  <svg viewBox="0 0 20 20" fill="none">
+                    <path
+                      d="M10 2.5c1.8 2.4 3.2 4.4 3.2 6.6 0 2.1-1.4 3.8-3.2 3.8S6.8 11.2 6.8 9.1c0-2.2 1.4-4.2 3.2-6.6z"
+                      fill="currentColor"
+                    />
+                    <path
+                      d="M10 12.8v4.2"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span />
+                </div>
+
+                <h1
+                  className="whimsy-invite-title"
+                  style={{ animationDelay: "90ms" }}
+                >
+                  {registry.title}
+                </h1>
+
+                <p
+                  className="whimsy-invite-lede"
+                  style={{ animationDelay: "160ms" }}
+                >
+                  {theme.inviteLede}
+                </p>
+
+                <a
+                  href="#registry-categories"
+                  className="whimsy-invite-cta btn-glow"
+                  style={{ animationDelay: "220ms" }}
+                >
+                  {theme.ctaLabel}
+                  <span aria-hidden>→</span>
+                </a>
               </div>
-
-              <h1
-                className="whimsy-invite-title"
-                style={{ animationDelay: "90ms" }}
-              >
-                {registry.title}
-              </h1>
-
-              <p
-                className="whimsy-invite-lede"
-                style={{ animationDelay: "160ms" }}
-              >
-                A gentle wishlist for the newest member of our family —
-                chosen with love, waiting for yours.
-              </p>
-
-              <a
-                href="#registry-categories"
-                className="whimsy-invite-cta btn-glow"
-                style={{ animationDelay: "220ms" }}
-              >
-                Open the Registry
-                <span aria-hidden>→</span>
-              </a>
             </div>
           </div>
         </div>
@@ -374,6 +380,8 @@ export function RegistryView({ initial }: { initial: Registry }) {
             items={registry.items}
             activeId={activeCategoryId}
             onSelect={selectCategory}
+            heading={theme.categoryHeading}
+            subheading={theme.categorySubheading}
           />
         </div>
       ) : null}
@@ -390,7 +398,7 @@ export function RegistryView({ initial }: { initial: Registry }) {
           >
             {whimsy ? (
               <p className="mb-3 font-script text-2xl text-grove sm:text-3xl">
-                Our Story
+                {theme.storyHeading}
               </p>
             ) : null}
             <p className="max-w-3xl text-base leading-relaxed text-ink/80 sm:text-lg">
@@ -448,7 +456,7 @@ export function RegistryView({ initial }: { initial: Registry }) {
                     whimsy ? "text-grove-deep" : "text-ink"
                   }`}
                 >
-                  {whimsy ? "The Registry" : "Gifts"}
+                  {whimsy ? theme.registryHeading : "Gifts"}
                 </h2>
                 <p className="mt-1 text-sm text-ink/60">
                   {purchasedCount} of {registry.items.length} gifted
@@ -492,7 +500,7 @@ export function RegistryView({ initial }: { initial: Registry }) {
 
           <div className="mt-8 space-y-12">
             {whimsy && activeCategoryId ? (
-              <div className="grid grid-cols-2 gap-3 sm:gap-5">
+              <div className="whimsy-gift-grid grid grid-cols-2 gap-3 sm:gap-5">
                 {filteredItems.map((item, i) => renderGiftCard(item, i))}
               </div>
             ) : (
@@ -531,7 +539,7 @@ export function RegistryView({ initial }: { initial: Registry }) {
                           </h3>
                         </Reveal>
                       )}
-                      <div className="grid grid-cols-2 gap-3 sm:gap-5">
+                      <div className="whimsy-gift-grid grid grid-cols-2 gap-3 sm:gap-5">
                         {items.map((item, i) => renderGiftCard(item, i))}
                       </div>
                     </div>
@@ -547,7 +555,7 @@ export function RegistryView({ initial }: { initial: Registry }) {
                         </h3>
                       </Reveal>
                     ) : null}
-                    <div className="grid grid-cols-2 gap-3 sm:gap-5">
+                    <div className="whimsy-gift-grid grid grid-cols-2 gap-3 sm:gap-5">
                       {grouped.uncategorized.map((item, i) =>
                         renderGiftCard(item, i),
                       )}
@@ -619,12 +627,14 @@ export function RegistryView({ initial }: { initial: Registry }) {
                         </svg>
                       </div>
                       <h3 className="cash-gift-title">
-                        {/fund/i.test(f.title) ? "A little something special" : f.title}
+                        {/fund/i.test(f.title)
+                          ? theme.cashGiftTitle
+                          : f.title || theme.cashGiftTitle}
                       </h3>
                       <p className="cash-gift-copy">
                         {f.description && !/upi/i.test(f.description)
                           ? f.description
-                          : "Send a cash gift of any amount — it goes directly to the family via UPI."}
+                          : theme.cashGiftDescription}
                       </p>
                       {gifted ? (
                         <p className="cash-gift-meta">

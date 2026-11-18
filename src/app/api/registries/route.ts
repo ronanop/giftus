@@ -22,6 +22,28 @@ export async function GET(req: Request) {
   });
 }
 
+const imageUrlSchema = z
+  .string()
+  .min(1)
+  .refine(
+    (v) => v.startsWith("/") || /^https?:\/\//i.test(v),
+    "Must be a URL or site path",
+  );
+
+const themeSchema = z
+  .object({
+    scriptLine: z.string().optional(),
+    inviteLede: z.string().optional(),
+    categoryHeading: z.string().optional(),
+    categorySubheading: z.string().optional(),
+    registryHeading: z.string().optional(),
+    ctaLabel: z.string().optional(),
+    storyHeading: z.string().optional(),
+    cashGiftTitle: z.string().optional(),
+    cashGiftDescription: z.string().optional(),
+  })
+  .optional();
+
 const createSchema = z.object({
   title: z.string().min(2),
   occasion: z.enum([
@@ -32,11 +54,12 @@ const createSchema = z.object({
     "birthday",
   ]),
   story: z.string().optional(),
-  coverImageUrl: z.string().url().optional(),
+  coverImageUrl: imageUrlSchema.optional(),
   eventDate: z.string().optional(),
   location: z.string().optional(),
   upiId: z.string().optional(),
   upiName: z.string().optional(),
+  theme: themeSchema,
 });
 
 export async function POST(req: Request) {

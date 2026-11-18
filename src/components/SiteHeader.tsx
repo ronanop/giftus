@@ -33,6 +33,12 @@ export async function SiteHeader() {
               >
                 Dashboard
               </Link>
+              <Link
+                href="/profile"
+                className="rounded-full px-4 py-2 text-sm text-ink/80 transition hover:bg-mist"
+              >
+                Profile
+              </Link>
               <form action="/api/auth/logout" method="post">
                 <button
                   type="submit"

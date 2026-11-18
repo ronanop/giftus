@@ -1,22 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { nanoid } from "nanoid";
-import type { GiftItem, Registry } from "@/lib/types";
+import { useMemo, useRef, useState } from "react";
+import type { BabyArrivalTheme, GiftItem, Registry } from "@/lib/types";
 import { formatINR } from "@/lib/format";
 import { categoryImage, groupItemsByCategory } from "@/lib/categories";
 import { isUsableProductImage } from "@/lib/product-image";
+import {
+  BABY_ARRIVAL_DEFAULTS,
+  COVER_IMAGE_GUIDE,
+  isBabyArrivalOccasion,
+  resolveBabyArrivalTheme,
+} from "@/lib/baby-arrival-template";
 
 export function RegistryEditor({ initial }: { initial: Registry }) {
   const [registry, setRegistry] = useState({
     ...initial,
     categories: initial.categories || [],
   });
+  const babyArrival = isBabyArrivalOccasion(registry.occasion);
+  const resolvedTheme = resolveBabyArrivalTheme(registry.theme);
+  const [title, setTitle] = useState(initial.title);
   const [story, setStory] = useState(initial.story);
+  const [location, setLocation] = useState(initial.location || "");
+  const [eventDate, setEventDate] = useState(initial.eventDate || "");
   const [upiId, setUpiId] = useState(initial.upiId || "");
-  const [photoUrl, setPhotoUrl] = useState("");
-  const [photoCaption, setPhotoCaption] = useState("");
+  const [themeDraft, setThemeDraft] = useState<Required<BabyArrivalTheme>>({
+    ...resolvedTheme,
+  });
   const [productUrl, setProductUrl] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [newCategoryName, setNewCategoryName] = useState("");
@@ -26,11 +37,15 @@ export function RegistryEditor({ initial }: { initial: Registry }) {
     price: string;
     categoryId: string;
   }>({ title: "", price: "", categoryId: "" });
-  const [fundTitle, setFundTitle] = useState("");
+  const [fundTitle, setFundTitle] = useState(
+    babyArrival ? BABY_ARRIVAL_DEFAULTS.cashGiftTitle : "",
+  );
   const [fundGoal, setFundGoal] = useState(25000);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [coverDragging, setCoverDragging] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const grouped = useMemo(() => groupItemsByCategory(registry), [registry]);
 
@@ -50,12 +65,23 @@ export function RegistryEditor({ initial }: { initial: Registry }) {
       const res = await fetch(`/api/registries/${registry.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ story, upiId, upiName: registry.title }),
+        body: JSON.stringify({
+          title: title.trim(),
+          story,
+          location: location.trim() || undefined,
+          eventDate: eventDate || undefined,
+          upiId,
+          upiName: title.trim() || registry.title,
+          theme: babyArrival ? themeDraft : undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Save failed");
       setRegistry(data.registry);
-      flash("Saved");
+      if (data.registry.theme) {
+        setThemeDraft(resolveBabyArrivalTheme(data.registry.theme));
+      }
+      flash("Saved page details");
     } catch (e) {
       fail(e);
     } finally {
@@ -63,55 +89,24 @@ export function RegistryEditor({ initial }: { initial: Registry }) {
     }
   }
 
-  async function addPhoto() {
-    if (!photoUrl) return;
+  async function uploadCoverFile(file: File) {
     setBusy(true);
-    try {
-      const photos = [
-        ...registry.photos,
-        { id: nanoid(), url: photoUrl, caption: photoCaption || undefined },
-      ];
-      const res = await fetch(`/api/registries/${registry.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photos }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Could not add photo");
-      setRegistry(data.registry);
-      setPhotoUrl("");
-      setPhotoCaption("");
-      flash("Photo added");
-    } catch (e) {
-      fail(e);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function uploadPhotoFile(file: File) {
-    setBusy(true);
-    setMessage("Uploading to Neon Object Storage…");
+    setMessage("Uploading cover image…");
     try {
       const body = new FormData();
       body.append("file", file);
       const up = await fetch("/api/upload", { method: "POST", body });
       const uploaded = await up.json();
       if (!up.ok) throw new Error(uploaded.error || "Upload failed");
-      const photos = [
-        ...registry.photos,
-        { id: nanoid(), url: uploaded.url, caption: photoCaption || undefined },
-      ];
       const res = await fetch(`/api/registries/${registry.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photos }),
+        body: JSON.stringify({ coverImageUrl: uploaded.url }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Could not save photo");
+      if (!res.ok) throw new Error(data.error || "Could not save cover");
       setRegistry(data.registry);
-      setPhotoCaption("");
-      flash("Photo uploaded");
+      flash("Cover image updated");
     } catch (e) {
       fail(e);
     } finally {
@@ -461,6 +456,12 @@ export function RegistryEditor({ initial }: { initial: Registry }) {
 
       <h1 className="mt-6 font-display text-4xl text-ink">{registry.title}</h1>
       <p className="mt-1 text-sm text-ink/55">giftus.in/r/{registry.slug}</p>
+      {babyArrival ? (
+        <p className="mt-2 text-sm text-grove">
+          Baby Arrival template — edit names, dates, cover, story, and gifts
+          below. Guests see the whimsical live page.
+        </p>
+      ) : null}
 
       {(message || error) && (
         <p className={`mt-4 text-sm ${error ? "text-rose" : "text-sage"}`}>
@@ -469,74 +470,194 @@ export function RegistryEditor({ initial }: { initial: Registry }) {
       )}
 
       <section className="mt-10 space-y-4 rounded-[1.75rem] bg-white p-6 shadow-[0_10px_30px_rgba(28,20,16,0.05)]">
-        <h2 className="font-display text-2xl">Story & UPI</h2>
-        <textarea
-          value={story}
-          onChange={(e) => setStory(e.target.value)}
-          rows={4}
-          className="w-full rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
-        />
-        <input
-          value={upiId}
-          onChange={(e) => setUpiId(e.target.value)}
-          placeholder="yourname@oksbi"
-          className="w-full rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
-        />
+        <div>
+          <h2 className="font-display text-2xl">
+            {babyArrival ? "Page details" : "Story & UPI"}
+          </h2>
+          {babyArrival ? (
+            <p className="mt-1 text-sm text-ink/60">
+              Everything here appears on your public Baby Arrival page.
+            </p>
+          ) : null}
+        </div>
+        <label className="block text-sm">
+          <span className="text-ink/60">Registry title</span>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Shraddha's Baby Arrival"
+            className="mt-1 w-full rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
+          />
+        </label>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block text-sm">
+            <span className="text-ink/60">City</span>
+            <input
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              className="mt-1 w-full rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-ink/60">Event date</span>
+            <input
+              type="date"
+              value={eventDate}
+              onChange={(e) => setEventDate(e.target.value)}
+              className="mt-1 w-full rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
+            />
+          </label>
+        </div>
+        {babyArrival ? (
+          <>
+            <label className="block text-sm">
+              <span className="text-ink/60">Script line (invite card)</span>
+              <input
+                value={themeDraft.scriptLine}
+                onChange={(e) =>
+                  setThemeDraft((t) => ({ ...t, scriptLine: e.target.value }))
+                }
+                placeholder={BABY_ARRIVAL_DEFAULTS.scriptLine}
+                className="mt-1 w-full rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="text-ink/60">Invite supporting line</span>
+              <textarea
+                value={themeDraft.inviteLede}
+                onChange={(e) =>
+                  setThemeDraft((t) => ({ ...t, inviteLede: e.target.value }))
+                }
+                rows={2}
+                className="mt-1 w-full rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="text-ink/60">Story section heading</span>
+              <input
+                value={themeDraft.storyHeading}
+                onChange={(e) =>
+                  setThemeDraft((t) => ({ ...t, storyHeading: e.target.value }))
+                }
+                className="mt-1 w-full rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
+              />
+            </label>
+          </>
+        ) : null}
+        <label className="block text-sm">
+          <span className="text-ink/60">Your story</span>
+          <textarea
+            value={story}
+            onChange={(e) => setStory(e.target.value)}
+            rows={4}
+            className="mt-1 w-full rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
+          />
+        </label>
+        <label className="block text-sm">
+          <span className="text-ink/60">UPI ID</span>
+          <input
+            value={upiId}
+            onChange={(e) => setUpiId(e.target.value)}
+            placeholder="yourname@oksbi"
+            className="mt-1 w-full rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
+          />
+        </label>
         <button
           type="button"
           disabled={busy}
           onClick={() => void saveBasics()}
           className="rounded-full bg-rose px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
         >
-          Save
+          Save page details
         </button>
       </section>
 
       <section className="mt-6 space-y-4 rounded-[1.75rem] bg-white p-6 shadow-[0_10px_30px_rgba(28,20,16,0.05)]">
-        <h2 className="font-display text-2xl">Family photos</h2>
+        <div>
+          <h2 className="font-display text-2xl">Hero cover image</h2>
+          <p className="mt-1 text-sm text-ink/60">
+            This is the main photo under the navbar on your public page. Uploads
+            go to Neon Object Storage; the image URL is saved on your registry in
+            Neon Postgres.
+          </p>
+          <div className="mt-3 rounded-2xl border border-grove/15 bg-parchment/70 px-4 py-3 text-sm text-grove-deep">
+            <p className="font-medium">{COVER_IMAGE_GUIDE.label}</p>
+            <ul className="mt-1.5 list-disc space-y-1 pl-5 text-grove/80">
+              <li>Aspect: {COVER_IMAGE_GUIDE.aspect}</li>
+              <li>Recommended size: {COVER_IMAGE_GUIDE.recommended}</li>
+              <li>Minimum: {COVER_IMAGE_GUIDE.minimum}</li>
+              <li>{COVER_IMAGE_GUIDE.maxDisplay}</li>
+              <li>{COVER_IMAGE_GUIDE.tip}</li>
+            </ul>
+          </div>
+        </div>
+        {registry.coverImageUrl ? (
+          <div className="overflow-hidden rounded-2xl border border-mist bg-mist/30">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={registry.coverImageUrl}
+              alt=""
+              className="aspect-[4/3] w-full max-w-md object-cover"
+            />
+          </div>
+        ) : null}
         <input
+          ref={coverInputRef}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp,image/gif"
           disabled={busy}
+          className="sr-only"
           onChange={(e) => {
             const file = e.target.files?.[0];
-            if (file) void uploadPhotoFile(file);
+            if (file) void uploadCoverFile(file);
             e.currentTarget.value = "";
           }}
-          className="block w-full text-sm text-ink/70"
         />
-        <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-          <input
-            value={photoUrl}
-            onChange={(e) => setPhotoUrl(e.target.value)}
-            placeholder="Or paste a photo URL"
-            className="rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
-          />
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void addPhoto()}
-            className="rounded-full bg-ink px-5 py-3 text-sm font-semibold text-paper disabled:opacity-50"
-          >
-            Add photo
-          </button>
-        </div>
-        <input
-          value={photoCaption}
-          onChange={(e) => setPhotoCaption(e.target.value)}
-          placeholder="Caption (optional)"
-          className="w-full rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
-        />
-        <div className="grid grid-cols-3 gap-3">
-          {registry.photos.map((p) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={p.id}
-              src={p.url}
-              alt=""
-              className="aspect-square rounded-2xl object-cover"
-            />
-          ))}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => coverInputRef.current?.click()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              coverInputRef.current?.click();
+            }
+          }}
+          onDragEnter={(e) => {
+            e.preventDefault();
+            setCoverDragging(true);
+          }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setCoverDragging(true);
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault();
+            setCoverDragging(false);
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            setCoverDragging(false);
+            const file = e.dataTransfer.files?.[0];
+            if (file?.type.startsWith("image/")) void uploadCoverFile(file);
+          }}
+          className={`cursor-pointer rounded-[1.35rem] border border-dashed px-5 py-8 text-center transition ${
+            coverDragging
+              ? "border-grove bg-sage-soft/50"
+              : "border-grove/30 bg-parchment/40 hover:border-grove/55 hover:bg-parchment/70"
+          } ${busy ? "pointer-events-none opacity-60" : ""}`}
+        >
+          <p className="font-display text-lg text-grove-deep">
+            {registry.coverImageUrl
+              ? "Replace cover photo"
+              : "Upload cover photo"}
+          </p>
+          <p className="mt-1 text-sm text-grove/70">
+            Drag & drop, or click to choose a JPG / PNG / WebP
+          </p>
+          <span className="mt-4 inline-flex rounded-full bg-grove px-5 py-2.5 text-sm font-semibold text-parchment">
+            {busy ? "Uploading…" : "Choose photo"}
+          </span>
         </div>
       </section>
 
@@ -657,18 +778,23 @@ export function RegistryEditor({ initial }: { initial: Registry }) {
             Paste an Amazon, Flipkart, Myntra, FirstCry, or any product link.
           </p>
           <div className="mt-3 grid gap-3">
-            <select
-              value={selectedCategoryId}
-              onChange={(e) => setSelectedCategoryId(e.target.value)}
-              className="rounded-2xl border border-mist bg-white px-4 py-3 text-sm outline-none focus:border-rose"
-            >
-              <option value="">Uncategorized</option>
-              {registry.categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            <label className="grid gap-2">
+              <span className="text-sm font-medium text-ink">
+                Choose category for gift
+              </span>
+              <select
+                value={selectedCategoryId}
+                onChange={(e) => setSelectedCategoryId(e.target.value)}
+                className="rounded-2xl border border-mist bg-white px-4 py-3 text-sm outline-none focus:border-rose"
+              >
+                <option value="">Uncategorized</option>
+                {registry.categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
             <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
               <input
                 value={productUrl}
@@ -714,12 +840,23 @@ export function RegistryEditor({ initial }: { initial: Registry }) {
       </section>
 
       <section className="mt-6 space-y-4 rounded-[1.75rem] bg-white p-6 shadow-[0_10px_30px_rgba(28,20,16,0.05)]">
-        <h2 className="font-display text-2xl">Cash fund</h2>
+        <div>
+          <h2 className="font-display text-2xl">
+            {babyArrival ? "Cash gift" : "Cash fund"}
+          </h2>
+          {babyArrival ? (
+            <p className="mt-1 text-sm text-ink/60">
+              Guests can send money via UPI. Rename the gift title guests see.
+            </p>
+          ) : null}
+        </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <input
             value={fundTitle}
             onChange={(e) => setFundTitle(e.target.value)}
-            placeholder="Nursery fund"
+            placeholder={
+              babyArrival ? "A little something special" : "Nursery fund"
+            }
             className="rounded-2xl border border-mist px-4 py-3 outline-none focus:border-rose"
           />
           <input
@@ -735,12 +872,13 @@ export function RegistryEditor({ initial }: { initial: Registry }) {
           onClick={() => void addFund()}
           className="rounded-full bg-ink px-5 py-3 text-sm font-semibold text-paper disabled:opacity-50"
         >
-          Add fund
+          {babyArrival ? "Add cash gift" : "Add fund"}
         </button>
         <ul className="space-y-2 text-sm text-ink/70">
           {registry.funds.map((f) => (
             <li key={f.id}>
-              {f.title} — goal {formatINR(f.goalAmount)}
+              {f.title}
+              {f.goalAmount ? ` — soft goal ${formatINR(f.goalAmount)}` : ""}
             </li>
           ))}
         </ul>

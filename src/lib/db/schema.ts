@@ -39,6 +39,7 @@ export const registries = pgTable("registries", {
   categories: jsonb("categories").$type<unknown[]>().default([]),
   items: jsonb("items").$type<unknown[]>().default([]),
   funds: jsonb("funds").$type<unknown[]>().default([]),
+  theme: jsonb("theme").$type<Record<string, unknown>>().default({}),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });

@@ -15,15 +15,23 @@ export async function GET(
   return NextResponse.json({ registry });
 }
 
+const imageUrlSchema = z
+  .string()
+  .min(1)
+  .refine(
+    (v) => v.startsWith("/") || /^https?:\/\//i.test(v),
+    "Must be a URL or site path",
+  );
+
 const patchSchema = z.object({
   title: z.string().min(2).optional(),
   story: z.string().optional(),
-  coverImageUrl: z.string().url().optional(),
+  coverImageUrl: imageUrlSchema.optional(),
   photos: z
     .array(
       z.object({
         id: z.string(),
-        url: z.string().url(),
+        url: imageUrlSchema,
         caption: z.string().optional(),
       }),
     )
@@ -41,6 +49,19 @@ const patchSchema = z.object({
       "anniversary",
       "birthday",
     ])
+    .optional(),
+  theme: z
+    .object({
+      scriptLine: z.string().optional(),
+      inviteLede: z.string().optional(),
+      categoryHeading: z.string().optional(),
+      categorySubheading: z.string().optional(),
+      registryHeading: z.string().optional(),
+      ctaLabel: z.string().optional(),
+      storyHeading: z.string().optional(),
+      cashGiftTitle: z.string().optional(),
+      cashGiftDescription: z.string().optional(),
+    })
     .optional(),
 });
 

@@ -2,8 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { listRegistriesForOwner } from "@/lib/store";
-import { occasionLabel } from "@/lib/format";
 import { SiteHeader } from "@/components/SiteHeader";
+import { DashboardRegistryCard } from "@/components/DashboardRegistryCard";
 
 export default async function DashboardPage() {
   const session = await getSession();
@@ -41,20 +41,15 @@ export default async function DashboardPage() {
         ) : (
           <div className="mt-10 grid gap-4">
             {registries.map((r) => (
-              <Link
+              <DashboardRegistryCard
                 key={r.id}
-                href={`/dashboard/${r.id}`}
-                className="gift-card flex flex-col gap-3 rounded-[1.5rem] border border-mist/60 bg-white/90 p-5 shadow-[0_10px_30px_rgba(28,20,16,0.05)] sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <p className="text-sm text-sage">{occasionLabel(r.occasion)}</p>
-                  <h2 className="font-display text-2xl text-ink">{r.title}</h2>
-                  <p className="mt-1 text-sm text-ink/55">
-                    {r.items.length} gifts · {r.funds.length} funds · /r/{r.slug}
-                  </p>
-                </div>
-                <span className="text-sm font-medium text-rose">Edit →</span>
-              </Link>
+                id={r.id}
+                title={r.title}
+                occasion={r.occasion}
+                slug={r.slug}
+                itemCount={r.items.length}
+                fundCount={r.funds.length}
+              />
             ))}
           </div>
         )}

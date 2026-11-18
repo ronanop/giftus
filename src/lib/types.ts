@@ -54,6 +54,19 @@ export interface CashFund {
   contributors: { name: string; amount: number; message?: string; at: string }[];
 }
 
+/** Editable copy for the Baby Arrival page template (occasion = baby_shower). */
+export interface BabyArrivalTheme {
+  scriptLine?: string;
+  inviteLede?: string;
+  categoryHeading?: string;
+  categorySubheading?: string;
+  registryHeading?: string;
+  ctaLabel?: string;
+  storyHeading?: string;
+  cashGiftTitle?: string;
+  cashGiftDescription?: string;
+}
+
 export interface Registry {
   id: string;
   slug: string;
@@ -71,6 +84,8 @@ export interface Registry {
   categories: GiftCategory[];
   items: GiftItem[];
   funds: CashFund[];
+  /** Baby Arrival template overrides; ignored for other occasions. */
+  theme?: BabyArrivalTheme;
   createdAt: string;
   updatedAt: string;
 }

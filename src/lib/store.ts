@@ -11,6 +11,7 @@ import {
   sanitizeProductImageUrl,
 } from "./product-image";
 import type {
+  BabyArrivalTheme,
   CashFund,
   GiftCategory,
   GiftItem,
@@ -19,6 +20,12 @@ import type {
   RegistryPhoto,
   SessionUser,
 } from "./types";
+import {
+  BABY_ARRIVAL_DEFAULTS,
+  BABY_ARRIVAL_STORY_DEFAULT,
+  defaultBabyArrivalCashGift,
+  isBabyArrivalOccasion,
+} from "./baby-arrival-template";
 
 function rowToRegistry(row: typeof registries.$inferSelect): Registry {
   const items = (((row.items as GiftItem[] | null) ?? []) as GiftItem[]).map(
@@ -53,6 +60,10 @@ function rowToRegistry(row: typeof registries.$inferSelect): Registry {
     categories,
     items,
     funds: ((row.funds as CashFund[] | null) ?? []) as CashFund[],
+    theme:
+      ((row as { theme?: BabyArrivalTheme | null }).theme as
+        | BabyArrivalTheme
+        | null) ?? undefined,
     createdAt: row.createdAt?.toISOString() ?? new Date().toISOString(),
     updatedAt: row.updatedAt?.toISOString() ?? new Date().toISOString(),
   };
@@ -168,6 +179,25 @@ export async function getUserById(id: string): Promise<SessionUser | null> {
   return { id: user.id, name: user.name, email: user.email };
 }
 
+export async function updateUserProfile(
+  id: string,
+  input: { name: string },
+): Promise<SessionUser> {
+  const name = input.name.trim();
+  if (name.length < 2) {
+    throw new Error("Name must be at least 2 characters.");
+  }
+  const db = await getDb();
+  const existing = await db.query.users.findFirst({
+    where: eq(users.id, id),
+  });
+  if (!existing) {
+    throw new Error("Account not found.");
+  }
+  await db.update(users).set({ name }).where(eq(users.id, id));
+  return { id: existing.id, name, email: existing.email };
+}
+
 export async function listRegistriesForOwner(ownerId: string) {
   const db = await getDb();
   const rows = await db
@@ -244,11 +274,19 @@ export async function createRegistry(input: {
   location?: string;
   upiId?: string;
   upiName?: string;
+  theme?: BabyArrivalTheme;
 }) {
   const db = await getDb();
   const id = nanoid();
   const slug = await uniqueSlug(input.title);
   const now = new Date();
+  const babyArrival = isBabyArrivalOccasion(input.occasion);
+  const theme = babyArrival
+    ? { ...BABY_ARRIVAL_DEFAULTS, ...(input.theme || {}) }
+    : input.theme || {};
+  const cashGift = defaultBabyArrivalCashGift();
+  cashGift.id = nanoid();
+
   await db.insert(registries).values({
     id,
     slug,
@@ -257,7 +295,9 @@ export async function createRegistry(input: {
     occasion: input.occasion,
     story:
       input.story?.trim() ||
-      "Thank you for celebrating with us. Your presence is the greatest gift.",
+      (babyArrival
+        ? BABY_ARRIVAL_STORY_DEFAULT
+        : "Thank you for celebrating with us. Your presence is the greatest gift."),
     coverImageUrl:
       input.coverImageUrl ||
       "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=1600&q=80",
@@ -269,7 +309,8 @@ export async function createRegistry(input: {
     isPublic: true,
     categories: [],
     items: [],
-    funds: [],
+    funds: babyArrival ? [cashGift] : [],
+    theme,
     createdAt: now,
     updatedAt: now,
   });
@@ -297,6 +338,7 @@ export async function updateRegistry(
       | "categories"
       | "items"
       | "funds"
+      | "theme"
     >
   >,
 ) {
