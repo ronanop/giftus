@@ -39,7 +39,6 @@ export function organizationJsonLd() {
     "@type": "Organization",
     name: SITE_NAME,
     url: SITE_URL,
-    logo: absoluteUrl("/covers/shraddhas-baby-arrival.jpg"),
     description: SITE_DESCRIPTION,
     areaServed: {
       "@type": "Country",

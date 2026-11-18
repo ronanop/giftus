@@ -19,6 +19,13 @@ export const metadata: Metadata = {
     title: `${SITE_NAME} | Online Gift Registry for Indian Celebrations`,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
+    images: [],
+  },
+  twitter: {
+    card: "summary",
+    title: `${SITE_NAME} | Online Gift Registry for Indian Celebrations`,
+    description: SITE_DESCRIPTION,
+    images: [],
   },
 };
 

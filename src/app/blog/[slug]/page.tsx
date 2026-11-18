@@ -42,11 +42,13 @@ export async function generateMetadata({
       url: `${SITE_URL}/blog/${post.slug}`,
       siteName: SITE_NAME,
       publishedTime: post.date,
+      images: [],
     },
     twitter: {
-      card: "summary_large_image",
+      card: "summary",
       title: post.title,
       description: post.description,
+      images: [],
     },
   };
 }

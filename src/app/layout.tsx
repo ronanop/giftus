@@ -54,20 +54,13 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: `${SITE_NAME} | ${SITE_TAGLINE}`,
     description: SITE_DESCRIPTION,
-    images: [
-      {
-        url: "/covers/shraddhas-baby-arrival.jpg",
-        width: 1600,
-        height: 1200,
-        alt: "Shubh Sagan gift registry celebration page",
-      },
-    ],
+    images: [],
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: `${SITE_NAME} | Gift Registry India`,
     description: SITE_DESCRIPTION,
-    images: ["/covers/shraddhas-baby-arrival.jpg"],
+    images: [],
   },
   robots: {
     index: true,
@@ -75,7 +68,7 @@ export const metadata: Metadata = {
     googleBot: {
       index: true,
       follow: true,
-      "max-image-preview": "large",
+      "max-image-preview": "none",
       "max-snippet": -1,
       "max-video-preview": -1,
     },

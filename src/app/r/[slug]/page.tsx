@@ -32,9 +32,6 @@ export async function generateMetadata({
     `${registry.title} gift registry on ${SITE_NAME}. Browse gifts, share blessings, and celebrate with UPI.`;
   const title = `${registry.title} | ${occasion} Gift Registry`;
   const url = absoluteUrl(`/r/${registry.slug}`);
-  const image = registry.coverImageUrl?.startsWith("http")
-    ? registry.coverImageUrl
-    : absoluteUrl(registry.coverImageUrl || "/covers/shraddhas-baby-arrival.jpg");
 
   return {
     title,
@@ -51,24 +48,20 @@ export async function generateMetadata({
     alternates: {
       canonical: `/r/${registry.slug}`,
     },
+    // Text-only share cards — do not attach cover/OG images.
     openGraph: {
       type: "website",
       url,
       title,
       description,
       siteName: SITE_NAME,
-      images: [
-        {
-          url: image,
-          alt: `${registry.title} gift registry cover`,
-        },
-      ],
+      images: [],
     },
     twitter: {
-      card: "summary_large_image",
+      card: "summary",
       title,
       description,
-      images: [image],
+      images: [],
     },
     robots: {
       index: true,
@@ -94,7 +87,6 @@ export default async function PublicRegistryPage({ params }: PageProps) {
           title: registry.title,
           description,
           slug: registry.slug,
-          imageUrl: registry.coverImageUrl,
           location: registry.location || undefined,
           occasion,
           updatedAt: registry.updatedAt,
