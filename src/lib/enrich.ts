@@ -47,6 +47,58 @@ function normalizeRupees(num: number) {
   return Math.round(num * 100) / 100;
 }
 
+function isShopifyPage(html: string, url: string) {
+  return /cdn\.shopify\.com|\/cdn\/shop\/|myshopify\.com|Shopify\.theme|shopify-section|duckduckbaby\.in/i.test(
+    `${html}\n${url}`,
+  );
+}
+
+/**
+ * Shopify variant prices are stored in the smallest currency unit (paise for INR).
+ * Prefer Open Graph major-unit amounts, then convert price_min/price_max cents.
+ */
+export function extractShopifyPriceRupees(html: string) {
+  const og =
+    html.match(
+      /property=["']og:price:amount["']\s+content=["']([^"']+)["']/i,
+    )?.[1] ||
+    html.match(
+      /content=["']([^"']+)["']\s+property=["']og:price:amount["']/i,
+    )?.[1] ||
+    html.match(
+      /property=["']product:price:amount["']\s+content=["']([^"']+)["']/i,
+    )?.[1] ||
+    html.match(
+      /content=["']([^"']+)["']\s+property=["']product:price:amount["']/i,
+    )?.[1];
+  const fromOg = parsePrice(og);
+  if (fromOg) return fromOg;
+
+  const cents =
+    html.match(/"price_min"\s*:\s*(\d+)/)?.[1] ||
+    html.match(/"price_max"\s*:\s*(\d+)/)?.[1];
+  if (cents) {
+    const n = Number(cents);
+    if (Number.isFinite(n) && n > 0) return normalizeRupees(n / 100);
+  }
+  return undefined;
+}
+
+/** True when a Shopify-style value is still in paise (e.g. 529900 for ₹5,299). */
+export function looksLikeShopifyMinorUnits(
+  raw: string | number,
+  majorHint?: number,
+) {
+  const text = String(raw).trim();
+  if (!/^\d+$/.test(text)) return false;
+  const cents = Number(text);
+  if (!Number.isFinite(cents) || cents < 100) return false;
+  if (cents % 100 !== 0) return false;
+  // Only coerce when a major-unit hint confirms (avoids ₹5,000 → ₹50 mistakes).
+  if (majorHint == null) return false;
+  return Math.abs(cents / 100 - majorHint) < 0.02;
+}
+
 /**
  * Parse INR price strings without turning "₹89,998.00" into 8999800
  * (decimal stripped) or "Rs. 8999" into 0.8999 (dot from "Rs.").
@@ -377,11 +429,24 @@ function parseProductHtml(html: string, baseUrl: string, storeName: string) {
       $(".a-price .a-price-fraction").first().text(),
   );
 
+  const ogPriceAmount =
+    $('meta[property="og:price:amount"]').attr("content") ||
+    $('meta[property="product:price:amount"]').attr("content");
+  const shopify = isShopifyPage(html, baseUrl);
+  const shopifyPrice = shopify ? extractShopifyPriceRupees(html) : undefined;
+  const majorHint = parsePrice(ogPriceAmount) ?? shopifyPrice;
+  const jsonLdPrice =
+    jsonLd.price && shopify && looksLikeShopifyMinorUnits(jsonLd.price, majorHint)
+      ? Number(String(jsonLd.price).trim()) / 100
+      : jsonLd.price;
+
+  // Prefer human-facing meta / Shopify-converted rupees before raw JSON prices
+  // (Shopify often exposes paise integers like 529900 for ₹5,299.00).
   const price = parsePrice(
     firstCryPrice != null ? firstCryPrice : undefined,
     amazonComposite,
-    jsonLd.price,
-    $('meta[property="product:price:amount"]').attr("content"),
+    ogPriceAmount,
+    shopifyPrice,
     $('meta[itemprop="price"]').attr("content"),
     $("[itemprop=price]").attr("content"),
     $(".a-price .a-offscreen").first().text(),
@@ -392,6 +457,7 @@ function parseProductHtml(html: string, baseUrl: string, storeName: string) {
     // Flipkart / generic
     $("div._30jeq3").first().text(),
     $('[class*="selling-price"]').first().text(),
+    jsonLdPrice,
   );
 
   let title = cleanTitle(jsonLd.name || ogTitle);

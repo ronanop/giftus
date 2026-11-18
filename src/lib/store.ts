@@ -89,11 +89,21 @@ async function hydrateRegistryItems(registry: Registry): Promise<Registry> {
         }
       }
 
-      // Backfill missing store prices (FirstCry often needs MRP + Dis parsing).
-      if (
-        (!next.price || next.price <= 0) &&
+      // Backfill / repair store prices. Shopify often stores paise (529900 = ₹5,299).
+      const needsPriceRepair =
         next.productUrl &&
-        /firstcry\.com|flipkart\.com|myntra\.com/i.test(next.productUrl)
+        ((!next.price || next.price <= 0) ||
+          (/duckduckbaby\.in|myshopify\.com|\/products\//i.test(
+            next.productUrl,
+          ) &&
+            next.price >= 100000 &&
+            Number.isInteger(next.price) &&
+            next.price % 100 === 0));
+      if (
+        needsPriceRepair &&
+        /firstcry\.com|flipkart\.com|myntra\.com|duckduckbaby\.in|myshopify\.com|\/products\//i.test(
+          next.productUrl,
+        )
       ) {
         try {
           const enriched = await enrichProductUrl(next.productUrl);

@@ -11,6 +11,11 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const initial = new URLSearchParams(window.location.search).get("q");
+    if (initial) setQ(initial);
+  }, []);
+
+  useEffect(() => {
     const t = setTimeout(async () => {
       setLoading(true);
       const res = await fetch(`/api/registries?q=${encodeURIComponent(q)}`);

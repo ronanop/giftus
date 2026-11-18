@@ -1155,9 +1155,175 @@ h3,
 }
 
 .home-shell {
+  --home-cream: #fff9f3;
+  --home-pink: #f8dde6;
+  --home-yellow: #f7ecd0;
+  --home-lavender: #e8dff5;
+  --home-mint: #ddeee4;
+  --home-peach: #f5e0d2;
   background:
-    radial-gradient(900px 420px at 0% 18%, rgba(184, 74, 94, 0.05), transparent 55%),
-    var(--paper);
+    radial-gradient(920px 480px at 8% 12%, rgba(184, 74, 94, 0.06), transparent 55%),
+    radial-gradient(700px 420px at 92% 8%, rgba(201, 150, 58, 0.08), transparent 50%),
+    linear-gradient(180deg, var(--home-cream) 0%, var(--paper) 42%, var(--home-cream) 100%);
+  color: var(--ink);
+}
+
+.home-header {
+  box-shadow: 0 10px 28px rgba(143, 51, 69, 0.04);
+}
+
+.home-hero-play {
+  background:
+    radial-gradient(680px 360px at 85% 20%, rgba(248, 221, 230, 0.55), transparent 60%),
+    radial-gradient(520px 280px at 10% 70%, rgba(247, 236, 208, 0.45), transparent 55%);
+}
+
+.home-hero-title {
+  letter-spacing: -0.02em;
+}
+
+.home-hero-photo {
+  box-shadow:
+    0 28px 60px rgba(28, 20, 16, 0.14),
+    0 0 0 1px rgba(184, 74, 94, 0.08);
+}
+
+.home-hero-photo-glow {
+  background:
+    linear-gradient(180deg, transparent 70%, rgba(255, 249, 243, 0.18) 100%),
+    radial-gradient(100% 70% at 90% 0%, rgba(184, 74, 94, 0.08), transparent 55%);
+}
+
+.home-flora {
+  filter: drop-shadow(0 12px 24px rgba(28, 20, 16, 0.1));
+  mask-image: radial-gradient(ellipse 68% 68% at 50% 50%, #000 30%, transparent 72%);
+  -webkit-mask-image: radial-gradient(ellipse 68% 68% at 50% 50%, #000 30%, transparent 72%);
+  opacity: 0.78;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.home-flora-tl {
+  transform: rotate(-12deg);
+}
+
+.home-flora-tr {
+  transform: rotate(18deg);
+}
+
+.home-flora-br {
+  transform: rotate(-8deg) scaleX(-1);
+  mix-blend-mode: soft-light;
+  opacity: 0.55;
+}
+
+.home-spark {
+  flex-shrink: 0;
+  animation: home-sparkle 2.8s var(--ease-out-soft) infinite;
+}
+
+.home-occasion-card {
+  border: 1px solid transparent;
+  box-shadow: 0 12px 28px rgba(28, 20, 16, 0.05);
+  transition:
+    transform var(--dur-med) var(--ease-out-soft),
+    box-shadow var(--dur-med) var(--ease-out-soft),
+    border-color var(--dur-fast) ease;
+}
+
+.home-occasion-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 18px 40px rgba(28, 20, 16, 0.1);
+  border-color: rgba(184, 74, 94, 0.18);
+}
+
+.home-occasion-wedding {
+  background: linear-gradient(165deg, #fff5f8 0%, var(--home-pink) 100%);
+}
+
+.home-occasion-baby {
+  background: linear-gradient(165deg, #fffdf6 0%, var(--home-yellow) 100%);
+}
+
+.home-occasion-birthday {
+  background: linear-gradient(165deg, #fbf8ff 0%, var(--home-lavender) 100%);
+}
+
+.home-occasion-house {
+  background: linear-gradient(165deg, #f5fbf7 0%, var(--home-mint) 100%);
+}
+
+.home-occasion-more {
+  background: linear-gradient(165deg, #fff8f3 0%, var(--home-peach) 100%);
+}
+
+.home-occasion-art {
+  width: min(100%, 7.5rem);
+  height: auto;
+}
+
+.home-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 9999px;
+  background: var(--petal);
+  color: var(--rose-deep);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.home-step-icon {
+  width: 3.25rem;
+  height: 3.25rem;
+}
+
+.home-step-connector {
+  position: absolute;
+  top: 3.4rem;
+  left: calc(50% + 1.5rem);
+  width: calc(100% - 3rem);
+  height: 0;
+  border-top: 1.5px dashed rgba(184, 74, 94, 0.35);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.home-features-bar {
+  background:
+    linear-gradient(180deg, rgba(255, 249, 243, 0.9), rgba(239, 232, 225, 0.55));
+  border-block: 1px solid rgba(239, 232, 225, 0.9);
+}
+
+.home-feature-col {
+  padding-inline: 0;
+}
+
+@media (min-width: 768px) {
+  .home-feature-col {
+    padding-inline: 1.5rem;
+  }
+
+  .home-feature-col:first-child {
+    padding-left: 0;
+  }
+
+  .home-feature-col:last-child {
+    padding-right: 0;
+  }
+}
+
+.home-feature-icon {
+  width: 2.35rem;
+  height: 2.35rem;
+}
+
+.home-footer-cta {
+  background:
+    radial-gradient(900px 420px at 80% 0%, rgba(255, 255, 255, 0.12), transparent 55%),
+    linear-gradient(145deg, #8f3345 0%, #b84a5e 48%, #6e2735 100%);
 }
 
 .home-hero-veil {
@@ -1180,6 +1346,18 @@ h3,
 .home-feature-frame {
   border-radius: 1.75rem;
   box-shadow: 0 24px 60px rgba(28, 20, 16, 0.14);
+}
+
+@keyframes home-sparkle {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.12) rotate(8deg);
+    opacity: 1;
+  }
 }
 
 .float-orb {
@@ -1361,7 +1539,8 @@ h3,
   .animate-soft-in,
   .animate-soft-in-right,
   .claim-highlight,
-  .progress-fill {
+  .progress-fill,
+  .home-spark {
     animation: none !important;
   }
 
@@ -1375,7 +1554,8 @@ h3,
   .reveal-scale,
   .gift-card,
   .gift-card img,
-  .btn-glow {
+  .btn-glow,
+  .home-occasion-card {
     transition: none !important;
     transform: none !important;
     filter: none !important;
