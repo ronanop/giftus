@@ -68,16 +68,25 @@
     linear-gradient(180deg, rgba(244, 238, 227, 0.35), rgba(235, 226, 210, 0.55));
 }
 
-.whimsy-flora {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 6% 18%, rgba(63, 82, 63, 0.08), transparent 18%),
-    radial-gradient(circle at 94% 22%, rgba(63, 82, 63, 0.07), transparent 16%),
-    radial-gradient(circle at 8% 88%, rgba(184, 74, 94, 0.05), transparent 18%),
-    radial-gradient(circle at 92% 86%, rgba(184, 74, 94, 0.05), transparent 16%);
-  opacity: 0.9;
+.whimsy-category-rail {
+  display: flex;
+  gap: 0.55rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.2rem 1rem 0.5rem;
+  scrollbar-width: none;
+  mask-image: linear-gradient(90deg, transparent 0, #000 0.6rem, #000 calc(100% - 0.85rem), transparent);
+}
+
+.whimsy-category-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.whimsy-category-slide {
+  flex: 0 0 4.35rem;
+  scroll-snap-align: start;
 }
 
 .whimsy-arch {
@@ -86,39 +95,57 @@
   width: 100%;
   flex-direction: column;
   align-items: center;
-  border: 1px solid rgba(63, 82, 63, 0.12);
-  border-radius: 999px 999px 1.35rem 1.35rem;
-  background:
-    linear-gradient(180deg, #fffaf3 0%, var(--parchment) 55%, var(--parchment-deep) 100%);
-  padding: 1.35rem 0.7rem 0.85rem;
-  box-shadow: 0 14px 28px rgba(47, 62, 47, 0.08);
+  gap: 0.35rem;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 0.1rem 0.05rem 0.15rem;
+  box-shadow: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
   transition:
     transform var(--dur-med) var(--ease-out-soft),
-    box-shadow var(--dur-med) var(--ease-out-soft),
-    border-color var(--dur-fast) ease;
+    opacity var(--dur-fast) ease;
 }
 
-.whimsy-arch:hover,
-.whimsy-arch.is-active {
-  transform: translateY(-6px);
-  border-color: rgba(63, 82, 63, 0.28);
-  box-shadow: 0 20px 36px rgba(47, 62, 47, 0.14);
+.whimsy-arch.is-active .whimsy-arch-art {
+  border-color: rgba(63, 82, 63, 0.45);
+  box-shadow:
+    0 8px 16px rgba(47, 62, 47, 0.14),
+    0 0 0 2px rgba(63, 82, 63, 0.16);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .whimsy-arch:hover {
+    transform: translateY(-2px);
+  }
+
+  .whimsy-arch:hover .whimsy-arch-art {
+    box-shadow: 0 10px 18px rgba(47, 62, 47, 0.14);
+  }
 }
 
 .whimsy-bow {
   position: absolute;
-  top: 0.35rem;
+  top: -0.1rem;
+  z-index: 2;
+  width: 1.15rem;
+  height: auto;
   color: var(--grove);
-  filter: drop-shadow(0 2px 2px rgba(47, 62, 47, 0.12));
+  filter: drop-shadow(0 1px 1px rgba(47, 62, 47, 0.12));
 }
 
 .whimsy-arch-art {
-  margin-top: 0.85rem;
-  width: 100%;
+  position: relative;
+  width: 3.35rem;
+  height: 3.35rem;
   overflow: hidden;
-  border-radius: 999px 999px 1rem 1rem;
-  aspect-ratio: 3 / 4;
-  background: #efe7da;
+  border-radius: 9999px;
+  border: 1px solid rgba(63, 82, 63, 0.14);
+  background:
+    linear-gradient(180deg, #fffaf3 0%, var(--parchment) 100%);
+  box-shadow: 0 6px 12px rgba(47, 62, 47, 0.1);
 }
 
 .whimsy-arch-art img {
@@ -128,8 +155,10 @@
   transition: transform 700ms var(--ease-out-soft);
 }
 
-.whimsy-arch:hover .whimsy-arch-art img {
-  transform: scale(1.04);
+@media (hover: hover) and (pointer: fine) {
+  .whimsy-arch:hover .whimsy-arch-art img {
+    transform: scale(1.05);
+  }
 }
 
 .whimsy-arch-fallback {
@@ -139,41 +168,53 @@
     radial-gradient(circle at 50% 40%, #fff8ee, #e7dfd1);
 }
 
-.whimsy-arch-footer {
-  margin-top: 0.75rem;
-  display: flex;
-  width: 100%;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.55rem;
-}
-
 .whimsy-arch-title {
-  min-height: 2.5rem;
-  padding-inline: 0.25rem;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  min-height: 1.75rem;
+  max-width: 4.25rem;
+  padding-inline: 0.05rem;
   text-align: center;
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: 0.92rem;
-  line-height: 1.25;
+  font-size: 0.65rem;
+  line-height: 1.2;
   color: var(--grove-deep);
 }
 
-.whimsy-arch-cta {
-  display: inline-flex;
-  height: 2rem;
-  width: 2rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  background: var(--grove);
-  color: #f7f2ea;
-  transition: background var(--dur-fast) ease, transform var(--dur-fast) ease;
-}
+@media (min-width: 640px) {
+  .whimsy-category-rail {
+    overflow: visible;
+    scroll-snap-type: none;
+    padding: 0;
+    mask-image: none;
+  }
 
-.whimsy-arch:hover .whimsy-arch-cta,
-.whimsy-arch.is-active .whimsy-arch-cta {
-  background: var(--grove-deep);
-  transform: translateX(2px);
+  .whimsy-category-slide {
+    flex: none;
+  }
+
+  .whimsy-arch {
+    gap: 0.4rem;
+  }
+
+  .whimsy-bow {
+    top: -0.05rem;
+    width: 1.35rem;
+  }
+
+  .whimsy-arch-art {
+    width: 4.1rem;
+    height: 4.1rem;
+  }
+
+  .whimsy-arch-title {
+    min-height: 1.9rem;
+    max-width: 5.5rem;
+    font-size: 0.74rem;
+  }
 }
 
 .whimsy-hero-frame {
@@ -184,10 +225,282 @@
     inset 0 0 0 6px rgba(244, 238, 227, 0.9);
 }
 
+.whimsy-gift {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  border: 1px solid rgba(63, 82, 63, 0.18);
+  border-radius: 1.15rem;
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(184, 74, 94, 0.06), transparent 42%),
+    radial-gradient(90% 70% at 0% 100%, rgba(63, 82, 63, 0.07), transparent 45%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(63, 82, 63, 0.025) 0 1px,
+      transparent 1px 7px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(168, 137, 74, 0.03) 0 1px,
+      transparent 1px 9px
+    ),
+    linear-gradient(165deg, #fffaf3 0%, var(--parchment) 48%, var(--parchment-deep) 100%);
+  box-shadow:
+    0 10px 24px rgba(47, 62, 47, 0.08),
+    inset 0 0 0 1px rgba(255, 250, 243, 0.75);
+}
+
+.whimsy-gift::before {
+  content: "";
+  position: absolute;
+  inset: 0.35rem;
+  border-radius: 0.9rem;
+  border: 1px dashed rgba(63, 82, 63, 0.16);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.whimsy-gift::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image:
+    radial-gradient(circle at 9px 9px, rgba(63, 82, 63, 0.16) 1px, transparent 1.2px),
+    radial-gradient(circle at calc(100% - 9px) 9px, rgba(63, 82, 63, 0.16) 1px, transparent 1.2px),
+    radial-gradient(circle at 9px calc(100% - 9px), rgba(63, 82, 63, 0.16) 1px, transparent 1.2px),
+    radial-gradient(circle at calc(100% - 9px) calc(100% - 9px), rgba(63, 82, 63, 0.16) 1px, transparent 1.2px);
+  pointer-events: none;
+  z-index: 2;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .whimsy-gift:hover {
+    box-shadow:
+      0 24px 48px rgba(47, 62, 47, 0.16),
+      inset 0 0 0 1px rgba(255, 250, 243, 0.85);
+    border-color: rgba(63, 82, 63, 0.28);
+  }
+}
+
+.whimsy-gift-media {
+  position: relative;
+  margin: 0.5rem 0.5rem 0;
+  overflow: hidden;
+  border-radius: 0.85rem;
+  aspect-ratio: 1 / 1;
+  background:
+    linear-gradient(145deg, #efe7da, #e4d8c6);
+  box-shadow:
+    inset 0 0 0 1px rgba(63, 82, 63, 0.1),
+    0 6px 14px rgba(47, 62, 47, 0.08);
+}
+
+.whimsy-gift-media img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+.whimsy-gift-store {
+  position: absolute;
+  right: 0.4rem;
+  top: 0.4rem;
+  border-radius: 9999px;
+  background: rgba(255, 250, 243, 0.96);
+  padding: 0.18rem 0.45rem;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--grove-deep);
+  box-shadow: 0 4px 10px rgba(47, 62, 47, 0.12);
+}
+
+.whimsy-gift-body {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 0.7rem 0.7rem 0.8rem;
+}
+
+.whimsy-gift-body::before {
+  content: "";
+  display: block;
+  width: 2rem;
+  height: 2px;
+  margin-bottom: 0.5rem;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--grove), rgba(168, 137, 74, 0.75), transparent);
+}
+
+.whimsy-gift-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  border-radius: 9999px;
+  background: rgba(63, 82, 63, 0.08);
+  padding: 0.2rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--grove-deep);
+}
+
+.whimsy-gift-actions {
+  margin-top: auto;
+}
+
+@media (min-width: 640px) {
+  .whimsy-gift {
+    border-radius: 1.65rem;
+    box-shadow:
+      0 16px 36px rgba(47, 62, 47, 0.1),
+      inset 0 0 0 1px rgba(255, 250, 243, 0.75);
+  }
+
+  .whimsy-gift::before {
+    inset: 0.55rem;
+    border-radius: 1.25rem;
+  }
+
+  .whimsy-gift::after {
+    background-image:
+      radial-gradient(circle at 12px 12px, rgba(63, 82, 63, 0.16) 1.1px, transparent 1.3px),
+      radial-gradient(circle at calc(100% - 12px) 12px, rgba(63, 82, 63, 0.16) 1.1px, transparent 1.3px),
+      radial-gradient(circle at 12px calc(100% - 12px), rgba(63, 82, 63, 0.16) 1.1px, transparent 1.3px),
+      radial-gradient(circle at calc(100% - 12px) calc(100% - 12px), rgba(63, 82, 63, 0.16) 1.1px, transparent 1.3px);
+  }
+
+  .whimsy-gift-media {
+    margin: 0.85rem 0.85rem 0;
+    border-radius: 1.15rem;
+    aspect-ratio: 16 / 11;
+  }
+
+  .whimsy-gift-store {
+    right: 0.75rem;
+    top: 0.75rem;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.7rem;
+  }
+
+  .whimsy-gift-body {
+    padding: 1.15rem 1.25rem 1.3rem;
+  }
+
+  .whimsy-gift-body::before {
+    width: 3.25rem;
+    height: 3px;
+    margin-bottom: 0.85rem;
+  }
+
+  .whimsy-gift-price {
+    margin-top: 0.85rem;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.92rem;
+  }
+
+  .whimsy-gift-corner {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  .whimsy-gift-corner.tl,
+  .whimsy-gift-corner.tr {
+    top: 0.35rem;
+  }
+
+  .whimsy-gift-corner.tl,
+  .whimsy-gift-corner.bl {
+    left: 0.35rem;
+  }
+
+  .whimsy-gift-corner.tr,
+  .whimsy-gift-corner.br {
+    right: 0.35rem;
+  }
+
+  .whimsy-gift-corner.bl,
+  .whimsy-gift-corner.br {
+    bottom: 0.35rem;
+  }
+}
+
+.whimsy-gift-actions .whimsy-view {
+  border-color: rgba(63, 82, 63, 0.22);
+  background: rgba(255, 250, 243, 0.72);
+  color: var(--grove-deep);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .whimsy-gift-actions .whimsy-view:hover {
+    border-color: rgba(63, 82, 63, 0.4);
+    background: rgba(63, 82, 63, 0.08);
+  }
+}
+
+.whimsy-gift-actions a,
+.whimsy-gift-actions button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.registry-filter-row {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.registry-filter-row::-webkit-scrollbar {
+  display: none;
+}
+
+.registry-filter-row button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.whimsy-gift-corner {
+  position: absolute;
+  z-index: 4;
+  width: 0.95rem;
+  height: 0.95rem;
+  color: rgba(63, 82, 63, 0.38);
+  pointer-events: none;
+}
+
+.whimsy-gift-corner.tl {
+  left: 0.22rem;
+  top: 0.22rem;
+}
+
+.whimsy-gift-corner.tr {
+  right: 0.22rem;
+  top: 0.22rem;
+  transform: scaleX(-1);
+}
+
+.whimsy-gift-corner.bl {
+  left: 0.22rem;
+  bottom: 0.22rem;
+  transform: scaleY(-1);
+}
+
+.whimsy-gift-corner.br {
+  right: 0.22rem;
+  bottom: 0.22rem;
+  transform: scale(-1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .whimsy-arch,
-  .whimsy-arch-art img,
-  .whimsy-arch-cta {
+  .whimsy-arch-art img {
     transition: none !important;
     transform: none !important;
   }

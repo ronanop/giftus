@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Figtree, Fraunces, Great_Vibes } from "next/font/google";
 import "./globals.css";
 
@@ -29,6 +29,13 @@ export const metadata: Metadata = {
   description:
     "Create a beautiful, personal baby shower or wedding registry. Add gifts from any store, share one link, accept UPI — made for Indian celebrations.",
   metadataBase: new URL("https://giftus.in"),
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#FBF7F2",
 };
 
 export default function RootLayout({

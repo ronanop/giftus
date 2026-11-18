@@ -10,8 +10,6 @@ function Bow() {
   return (
     <svg
       className="whimsy-bow"
-      width="54"
-      height="28"
       viewBox="0 0 54 28"
       fill="none"
       aria-hidden
@@ -31,20 +29,6 @@ function Bow() {
   );
 }
 
-function ArrowIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path
-        d="M3.5 8h9M8.5 4l4 4-4 4"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 export function WhimsicalCategories({
   categories,
   items,
@@ -59,26 +43,32 @@ export function WhimsicalCategories({
   if (!categories.length) return null;
 
   return (
-    <section className="whimsy-band relative overflow-hidden px-5 py-16 md:px-8 md:py-20">
-      <div className="whimsy-flora" aria-hidden />
+    <section className="whimsy-band relative overflow-x-clip py-10 sm:overflow-hidden sm:px-5 sm:py-16 md:px-8 md:py-20">
       <div className="relative mx-auto max-w-6xl text-center">
         <Reveal>
-          <h2 className="font-script text-4xl text-grove md:text-5xl">
-            Gifts Before the Baby Arrives
-          </h2>
-          <p className="mt-3 font-display text-sm tracking-[0.18em] text-grove/70 uppercase">
-            Explore our wishlist by category
-          </p>
+          <div className="px-5 sm:px-0">
+            <h2 className="mx-auto max-w-[16ch] font-script text-[1.85rem] leading-[1.15] text-grove sm:max-w-none sm:text-4xl md:text-5xl">
+              Gifts Before the Baby Arrives
+            </h2>
+            <p className="mt-2 font-display text-[0.7rem] tracking-[0.16em] text-grove/70 uppercase sm:mt-3 sm:text-sm sm:tracking-[0.18em]">
+              Explore our wishlist by category
+            </p>
+          </div>
         </Reveal>
 
-        <div className="mt-12 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 xl:gap-4">
+        <div className="whimsy-category-rail mt-6 sm:mt-10 sm:grid sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-7 xl:gap-3">
           {categories.map((category, i) => {
             const art =
               whimsyArtForCategory(category.name) ||
               categoryImage(category, items);
             const active = activeId === category.id;
             return (
-              <Reveal key={category.id} delay={i * 70} variant="scale">
+              <Reveal
+                key={category.id}
+                delay={i * 50}
+                variant="scale"
+                className="whimsy-category-slide"
+              >
                 <button
                   type="button"
                   onClick={() => onSelect(category.id)}
@@ -93,12 +83,7 @@ export function WhimsicalCategories({
                       <div className="whimsy-arch-fallback" />
                     )}
                   </div>
-                  <div className="whimsy-arch-footer">
-                    <span className="whimsy-arch-title">{category.name}</span>
-                    <span className="whimsy-arch-cta" aria-hidden>
-                      <ArrowIcon />
-                    </span>
-                  </div>
+                  <span className="whimsy-arch-title">{category.name}</span>
                 </button>
               </Reveal>
             );
